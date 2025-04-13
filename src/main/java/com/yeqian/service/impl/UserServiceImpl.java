@@ -1,0 +1,41 @@
+package com.yeqian.service.impl;
+
+import com.yeqian.dao.mapper.UserMapper;
+import com.yeqian.pojo.User;
+import com.yeqian.service.UserService;
+import com.yeqian.util.mybatis.proxy.MapperProxyFactory;
+
+public class UserServiceImpl implements UserService {
+    UserMapper userMapper = MapperProxyFactory.getProxy(UserMapper.class);
+
+    @Override
+    public void insertUser(User user) {
+        userMapper.insertUser(user);
+    }
+
+    @Override
+    public User selectUserByTele(String tele) {
+        return userMapper.selectUserByTele(tele);
+    }
+
+    @Override
+    public User selectUser(String tele, String password) {
+        return userMapper.selectUser(tele, password);
+    }
+
+    @Override
+    public void updateUsername(String username, Integer id) {
+        userMapper.updateUsername(username, id);
+    }
+
+
+    @Override
+    public void updateUserHeadPortrait(String headPortrait, Integer id) {
+        userMapper.updateUserHeadPortrait(headPortrait, id);
+    }
+
+    @Override
+    public void updateUserPassword(String password, Integer id) {
+        userMapper.updateUserPassword(password, id);
+    }
+}

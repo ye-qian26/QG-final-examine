@@ -1,0 +1,193 @@
+package com.yeqian.controller.servlet;
+
+import com.alibaba.fastjson.JSON;
+import com.yeqian.pojo.Administrator;
+import com.yeqian.pojo.User;
+import com.yeqian.service.AdministratorService;
+import com.yeqian.service.UserService;
+import com.yeqian.service.impl.AdministratorServiceImpl;
+import com.yeqian.service.impl.UserServiceImpl;
+
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+
+@WebServlet("/administratorServlet/*")
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, // 2MB
+        maxFileSize = 1024 * 1024 * 10,      // 10MB
+        maxRequestSize = 1024 * 1024 * 50)   // 50MB
+public class AdministratorServlet extends BaseServlet {
+    AdministratorService administratorService = new AdministratorServiceImpl();
+    private static final String UPLOAD_DIR = "uploads";
+    private static final String PROJECT_NAME = "Technical-Forum";
+
+    /**
+     * 管理员注册
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void registerAdministrator(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转为User类
+        Administrator administrator = JSON.parseObject(jsonString, Administrator.class);
+        //4.执行service方法
+        administratorService.insertAdministrator(administrator);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 根据手机号查询管理员
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectAdministratorByTele(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String tele = req.getReader().readLine();
+        //3.执行service方法
+        Administrator administrator = administratorService.selectByTele(tele);
+        if (administrator == null) {
+            //手机号不存在，可以使用改手机号
+            resp.getWriter().write("success");
+        } else {
+            //手机号存在，不可使用该手机号
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 用户登录
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void loginAdministrator(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String tele = req.getParameter("tele");
+        String password = req.getParameter("password");
+        String checked = req.getParameter("checked");
+        //3.执行service方法
+        Administrator administrator = administratorService.selectAdministrator(tele, password);
+        if (administrator != null) {
+
+            if ("true".equals(checked)) {
+                //用户勾选记住信息
+                //创建cookie记住信息
+                Cookie c_tele = new Cookie("tele", tele);
+                Cookie c_password = new Cookie("password", password);
+
+                //存储一小时，并设置路径
+                c_tele.setMaxAge(3600);
+                c_tele.setPath("/");
+                c_password.setMaxAge(3600);
+                c_password.setPath("/");
+
+                resp.addCookie(c_tele);
+                resp.addCookie(c_password);
+            }
+            //5.响应数据
+            String jsonString = JSON.toJSONString(administrator);
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(jsonString);
+        } else {
+            //4.响应数据
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 修改管理员昵称
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void updateAdministratorName(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _name = req.getParameter("name");
+        String _id = req.getParameter("id");
+        //3.解决get请求乱码问题
+        String name = new String(_name.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        Integer id = JSON.parseObject(_id, Integer.class);
+        //4.执行service方法
+        administratorService.updateAdministratorName(name, id);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 处理文件
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void uploadAvatar(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json;charset=UTF-8");
+        //2.获取文件
+        Part filePart = req.getPart("file");
+        String fileName = null;
+        String contentDisposition = filePart.getHeader("content-disposition");
+        if (contentDisposition != null) {
+            String[] tokens = contentDisposition.split(";");
+            for (String token : tokens) {
+                if (token.trim().startsWith("filename")) {
+                    fileName = token.substring(token.indexOf("=") + 1).trim().replace("\"", "");
+                    break;
+                }
+            }
+        }
+        String filePath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIR + File.separator + fileName;
+        //3.保存文件到服务器
+        File file = new File(filePath);
+        file.getParentFile().mkdirs();
+        filePart.write(filePath);
+        // 生成相对路径
+        String relativePath = UPLOAD_DIR + File.separator + fileName;
+        //4.获取用户id
+        String _id = req.getParameter("id");
+        Integer id = JSON.parseObject(_id, Integer.class);
+        //5.执行service方法
+        administratorService.updateAdministratorHeadPortrait(relativePath, id);
+        //6.响应数据
+        resp.getWriter().write("{\"success\": true, \"data\": {\"headPortraitPath\": \"/"
+                + PROJECT_NAME + "/" + UPLOAD_DIR + "/" + fileName + "\"}}");
+    }
+
+
+    /**
+     * 修改管理员密码
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void updateAdministratorPassword(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String password = req.getParameter("password");
+        String _id = req.getParameter("id");
+        //3.转换类型
+        Integer id = JSON.parseObject(_id, Integer.class);
+        //4.执行service方法
+        administratorService.updateAdministratorPassword(password, id);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+}
