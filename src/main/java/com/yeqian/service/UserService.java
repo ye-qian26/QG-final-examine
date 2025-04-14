@@ -49,4 +49,11 @@ public interface UserService {
      */
     void updateUserPassword(String password, Integer id);
 
+    /**
+     * 通过id查询用户
+     * @param id
+     * @return
+     */
+    User selectUserById(Integer id);
+
 }

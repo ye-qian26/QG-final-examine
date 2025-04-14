@@ -12,7 +12,7 @@ public interface UserMapper {
      * 添加用户
      * @param user
      */
-    @Insert("insert into user values (null, #{username}, MD5(#{password}), #{tele}, null)")
+    @Insert("insert into user values (null, #{username}, MD5(#{password}), #{tele}, #{headPortrait}, #{role})")
     void insertUser(User user);
 
     /**
@@ -55,4 +55,12 @@ public interface UserMapper {
      */
     @Update("update user set password = MD5(#{password}) where id = #{id}")
     void updateUserPassword(@Param("password") String password, @Param("id") Integer id);
+
+    /**
+     * 通过id查询用户
+     * @param id
+     * @return
+     */
+    @Select("select * from user where id = #{id}")
+    User selectUserById(@Param("id") Integer id);
 }

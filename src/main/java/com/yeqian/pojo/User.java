@@ -9,16 +9,32 @@ public class User {
     private String password;
     private String tele;
     private String headPortrait;
+    private Integer role;
 
     public User() {
     }
 
-    public User(Integer id, String username, String password, String tele, String headPortrait) {
+    public User(Integer id, String username, String password, String tele, String headPortrait, Integer role) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.tele = tele;
         this.headPortrait = headPortrait;
+        this.role = role;
+    }
+
+//    public String getRoleName() {
+//        if (role == null) {
+//            return "未知";
+//        }
+//        return role == 1 ? "普通用户" : "管理员";
+//    }
+    public Integer getRole() {
+        return role;
+    }
+
+    public void setRole(Integer role) {
+        this.role = role;
     }
 
     public Integer getId() {
@@ -69,6 +85,7 @@ public class User {
                 ", password='" + password + '\'' +
                 ", tele='" + tele + '\'' +
                 ", headPortrait='" + headPortrait + '\'' +
+                ", role=" + role +
                 '}';
     }
 }

@@ -6,20 +6,20 @@ package com.yeqian.pojo;
 public class Plate {
     private Integer id;
     private String name;
-    private Integer user_id;
+    private Integer userId;
     private String notice;
-    private Integer page_view;
+    private Integer pageView;
     private Integer likes;
 
     public Plate() {
     }
 
-    public Plate(Integer id, String name, Integer user_id, String notice, Integer page_view, Integer likes) {
+    public Plate(Integer id, String name, Integer userId, String notice, Integer pageView, Integer likes) {
         this.id = id;
         this.name = name;
-        this.user_id = user_id;
+        this.userId = userId;
         this.notice = notice;
-        this.page_view = page_view;
+        this.pageView = pageView;
         this.likes = likes;
     }
 
@@ -39,12 +39,20 @@ public class Plate {
         this.name = name;
     }
 
-    public Integer getUser_id() {
-        return user_id;
+    public Integer getUserId() {
+        return userId;
     }
 
-    public void setUser_id(Integer user_id) {
-        this.user_id = user_id;
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public Integer getPageView() {
+        return pageView;
+    }
+
+    public void setPageView(Integer pageView) {
+        this.pageView = pageView;
     }
 
     public String getNotice() {
@@ -53,14 +61,6 @@ public class Plate {
 
     public void setNotice(String notice) {
         this.notice = notice;
-    }
-
-    public Integer getPage_view() {
-        return page_view;
-    }
-
-    public void setPage_view(Integer page_view) {
-        this.page_view = page_view;
     }
 
     public Integer getLikes() {
@@ -74,11 +74,11 @@ public class Plate {
     @Override
     public String toString() {
         return "Plate{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", name='" + name + '\'' +
-                ", user_id=" + user_id +
+                ", userId=" + userId +
                 ", notice='" + notice + '\'' +
-                ", page_view=" + page_view +
+                ", pageView=" + pageView +
                 ", likes=" + likes +
                 '}';
     }

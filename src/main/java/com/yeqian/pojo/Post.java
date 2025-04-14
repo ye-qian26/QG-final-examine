@@ -7,20 +7,22 @@ public class Post {
     private Integer id;
     private String content;
     private String image;
-    private Integer page_view;
+    private Integer pageView;
     private Integer likes;
-    private Integer plate_id;
+    private Integer plateId;
+    private Integer userId;
 
     public Post() {
     }
 
-    public Post(Integer id, String content, String image, Integer page_view, Integer likes, Integer plate_id) {
+    public Post(Integer id, String content, String image, Integer pageView, Integer likes, Integer plateId, Integer userId) {
         this.id = id;
         this.content = content;
         this.image = image;
-        this.page_view = page_view;
+        this.pageView = pageView;
         this.likes = likes;
-        this.plate_id = plate_id;
+        this.plateId = plateId;
+        this.userId = userId;
     }
 
     public Integer getId() {
@@ -47,14 +49,6 @@ public class Post {
         this.image = image;
     }
 
-    public Integer getPage_view() {
-        return page_view;
-    }
-
-    public void setPage_view(Integer page_view) {
-        this.page_view = page_view;
-    }
-
     public Integer getLikes() {
         return likes;
     }
@@ -63,12 +57,20 @@ public class Post {
         this.likes = likes;
     }
 
-    public Integer getPlate_id() {
-        return plate_id;
+    public Integer getPageView() {
+        return pageView;
     }
 
-    public void setPlate_id(Integer plate_id) {
-        this.plate_id = plate_id;
+    public void setPageView(Integer pageView) {
+        this.pageView = pageView;
+    }
+
+    public Integer getPlateId() {
+        return plateId;
+    }
+
+    public void setPlateId(Integer plateId) {
+        this.plateId = plateId;
     }
 
     @Override
@@ -76,9 +78,11 @@ public class Post {
         return "Post{" +
                 "id=" + id +
                 ", content='" + content + '\'' +
-                ", page_view=" + page_view +
+                ", image='" + image + '\'' +
+                ", pageView=" + pageView +
                 ", likes=" + likes +
-                ", plate_id=" + plate_id +
+                ", plateId=" + plateId +
+                ", userId=" + userId +
                 '}';
     }
 }

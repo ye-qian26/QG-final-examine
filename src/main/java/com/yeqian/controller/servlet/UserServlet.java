@@ -186,4 +186,28 @@ public class UserServlet extends BaseServlet {
         //5.响应数据
         resp.getWriter().write("success");
     }
+
+    /**
+     * 通过id查询用户
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectUserById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _id = req.getParameter("id");
+        //3.转换类型
+        Integer id = JSON.parseObject(_id, Integer.class);
+        //4.执行service方法
+        User user = userService.selectUserById(id);
+        //5.响应数据
+        if (user == null) {
+            resp.getWriter().write("fail");
+        } else {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(user));
+        }
+    }
 }

@@ -135,7 +135,7 @@ public class MapperProxy implements InvocationHandler {
             //1.获取返回类型
             Class<?>[] parameterTypes = method.getParameterTypes();
             Class<?> parameterType = parameterTypes[0];
-            if (parameterType.isPrimitive() || parameterType == String.class) {
+            if (parameterType.isPrimitive() || parameterType == String.class || parameterType == Integer.class) {
                 //2.如果参数类型是基本类型，按原来设置参数方式执行
                 PreparedStatement ps = getPreparedStatement(method, args, originalSql, connection);
                 ps.executeUpdate();
@@ -209,7 +209,7 @@ public class MapperProxy implements InvocationHandler {
         //1.获取返回类型
         Class<?>[] parameterTypes = method.getParameterTypes();
         Class<?> parameterType = parameterTypes[0];
-        if (parameterType.isPrimitive()) {
+        if (parameterType.isPrimitive() || parameterType == String.class || parameterType == Integer.class) {
             //2.如果参数类型是基本类型，按原来设置参数方式执行
             PreparedStatement ps = getPreparedStatement(method, args, originalSql, connection);
             ps.executeUpdate();
@@ -239,9 +239,10 @@ public class MapperProxy implements InvocationHandler {
                     //设置参数
                     if (value != null) {
                         if (value.getClass() == String.class && ((String) value).isEmpty()) {
-                            break;
+                            this.typeHandlerMap.get(value.getClass()).setParameter(ps, i, null);
+                        } else {
+                            this.typeHandlerMap.get(value.getClass()).setParameter(ps, i, value);
                         }
-                        this.typeHandlerMap.get(value.getClass()).setParameter(ps, i, value);
                     }
                 }
             }
