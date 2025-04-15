@@ -27,7 +27,7 @@ public class PostServlet extends BaseServlet {
     private static final String PROJECT_NAME = "Technical-Forum";
 
     /**
-     * 添加板块
+     * 通过plateId查询post
      * @param req
      * @param resp
      * @throws Exception
@@ -77,7 +77,87 @@ public class PostServlet extends BaseServlet {
         file.getParentFile().mkdirs();
         filePart.write(filePath);
         //6.响应数据
-        resp.getWriter().write("{\"success\": true, \"data\": {\"headPortraitPath\": \"/"
+//        resp.getWriter().write("{\"success\": true, \"data\": {\"imagePath\": \"/"
+//                + PROJECT_NAME + "/" + UPLOAD_DIR + "/" + fileName + "\"," + "\"relativePath\": \"" + relativePath + "\"" + "}}");
+        resp.getWriter().write("{\"success\": true, \"data\": {\"imagePath\": \"/"
                 + PROJECT_NAME + "/" + UPLOAD_DIR + "/" + fileName + "\"}}");
     }
+
+    /**
+     * 添加帖子
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void addPost(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        req.setCharacterEncoding("UTF-8");
+        //1.接收数据
+        String _content = req.getParameter("content");
+        String image = req.getParameter("image");
+        String _userId = req.getParameter("userId");
+        String _plateId = req.getParameter("plateId");
+        //2.解决get乱码问题以及转换数据
+        String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        Integer plateId = JSON.parseObject(_plateId, Integer.class);
+        //3.执行service方法
+        postService.addPost(content, image, plateId, userId);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 删除帖子
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void deletePostById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //3.执行service方法
+        postService.deletePostById(postId);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 增加帖子点赞量
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void addPostLikesById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //3.执行service方法
+        postService.addPostLikesById(postId);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 减少帖子点赞量
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void reducePostLikesById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //3.执行service方法
+        postService.reducePostLikesById(postId);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
 }

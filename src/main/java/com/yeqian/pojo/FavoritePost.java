@@ -1,14 +1,14 @@
 package com.yeqian.pojo;
 
-public class favoritePost {
+public class FavoritePost {
     private Integer id;
     private Integer postId;
     private Integer userId;
 
-    public favoritePost() {
+    public FavoritePost() {
     }
 
-    public favoritePost(Integer id, Integer postId, Integer userId) {
+    public FavoritePost(Integer id, Integer postId, Integer userId) {
         this.id = id;
         this.postId = postId;
         this.userId = userId;

@@ -4,6 +4,7 @@ import com.yeqian.pojo.Plate;
 import com.yeqian.util.mybatis.annotations.Insert;
 import com.yeqian.util.mybatis.annotations.Param;
 import com.yeqian.util.mybatis.annotations.Select;
+import com.yeqian.util.mybatis.annotations.Update;
 
 import java.util.List;
 
@@ -19,4 +20,18 @@ public interface PlateService {
      * @return
      */
     List<Plate> selectByUserId(Integer userId);
+
+    /**
+     * 修改板块公告
+     * @param plateId
+     * @param notice
+     */
+    void updatePlateNotice(Integer plateId, String notice);
+
+    /**
+     * 根据板块id查询板块
+     * @param id
+     * @return
+     */
+    Plate selectById(Integer id);
 }

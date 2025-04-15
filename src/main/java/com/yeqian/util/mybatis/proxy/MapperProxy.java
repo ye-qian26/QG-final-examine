@@ -294,7 +294,11 @@ public class MapperProxy implements InvocationHandler {
             //得到所需参数名的对应值
             Object value = paramValuesMap.get(paramName);
             //通过传入对应参数类型来获取对应字段类型处理器来设置参数
-            this.typeHandlerMap.get(value.getClass()).setParameter(ps, i + 1, value);
+            if (value != null) {
+                this.typeHandlerMap.get(value.getClass()).setParameter(ps, i + 1, value);
+            } else {
+                this.typeHandlerMap.get(String.class).setParameter(ps, i + 1, null);
+            }
         }
         return ps;
     }

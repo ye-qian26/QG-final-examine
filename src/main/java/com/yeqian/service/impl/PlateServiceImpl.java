@@ -21,4 +21,14 @@ public class PlateServiceImpl implements PlateService {
     public List<Plate> selectByUserId(Integer userId) {
         return plateMapper.selectByUserId(userId);
     }
+
+    @Override
+    public void updatePlateNotice(Integer plateId, String notice) {
+        plateMapper.updatePlateNotice(plateId, notice);
+    }
+
+    @Override
+    public Plate selectById(Integer id) {
+        return plateMapper.selectById(id);
+    }
 }

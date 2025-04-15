@@ -55,4 +55,47 @@ public class PlateServlet extends BaseServlet {
             resp.getWriter().write("fail");
         }
     }
+
+    /**
+     * 添加板块
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void updatePlateNotice(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _plateId = req.getParameter("plateId");
+        String _notice = req.getParameter("notice");
+        Integer plateId = JSON.parseObject(_plateId, Integer.class);
+        String notice = new String(_notice.getBytes("iso8859-1"), StandardCharsets.UTF_8);
+        //3.执行service方法
+        plateService.updatePlateNotice(plateId, notice);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
+    /**
+     * 添加板块
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectPlateById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _plateId = req.getParameter("plateId");
+        Integer plateId = JSON.parseObject(_plateId, Integer.class);
+        //3.执行service方法
+        Plate plate = plateService.selectById(plateId);
+        //4.响应数据
+        if (plate != null) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(plate));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
 }

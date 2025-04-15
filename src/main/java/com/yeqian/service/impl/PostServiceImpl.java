@@ -14,4 +14,24 @@ public class PostServiceImpl implements PostService {
     public List<Post> selectPostByPlateId(Integer plateId) {
         return postMapper.selectPostByPlateId(plateId);
     }
+
+    @Override
+    public void addPost(String content, String image, Integer plateId, Integer userId) {
+        postMapper.addPost(content, image, plateId, userId);
+    }
+
+    @Override
+    public void deletePostById(Integer id) {
+        postMapper.deletePostById(id);
+    }
+
+    @Override
+    public void addPostLikesById(Integer id) {
+        postMapper.addPostLikesById(id);
+    }
+
+    @Override
+    public void reducePostLikesById(Integer id) {
+        postMapper.reducePostLikesById(id);
+    }
 }

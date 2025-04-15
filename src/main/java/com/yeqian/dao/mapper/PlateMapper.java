@@ -26,4 +26,20 @@ public interface PlateMapper {
     @Select("select * from plate where user_id = #{userId}")
     List<Plate> selectByUserId(@Param("userId") Integer userId);
 
+
+    /**
+     * 修改板块公告
+     * @param plateId
+     * @param notice
+     */
+    @Update("update plate set notice = #{notice} where id = #{plateId}")
+    void updatePlateNotice(@Param("plateId") Integer plateId, @Param("notice") String notice);
+
+    /**
+     * 根据板块id查询板块
+     * @param id
+     * @return
+     */
+    @Select("select * from plate where id = #{id}")
+    Plate selectById(@Param("id") Integer id);
 }

@@ -73,6 +73,14 @@ public class Post {
         this.plateId = plateId;
     }
 
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
     @Override
     public String toString() {
         return "Post{" +

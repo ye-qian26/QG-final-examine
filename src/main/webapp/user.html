@@ -43,7 +43,7 @@
         }
 
         .post-image {
-            width: 10%;
+            width: 20%;
             height: auto;
             margin-bottom: 10px;
         }
@@ -84,8 +84,16 @@
     <div v-if="activeIndex === '2'">
         <h1>我的板块</h1>
         <el-button type="primary" @click="createPlateDialogVisible=true">创建板块</el-button>
-        <el-tabs v-model="activeTab" @tab-click="selectPostByPlateId">
+        <el-tabs v-model="activeTab" @tab-click="handleTab">
             <el-tab-pane v-for="(plate, index) in plateDate" :key="index" :label="plate.name" :name="plate.id">
+                <el-form :model="form2" label-width="120px" :rules="rules">
+                    <el-form-item label="板块公告" prop="notice">
+                        <el-input type="textarea" v-model="form2.notice" ></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type='primary' @click="updatePlateNotice">保存</el-button>
+                    </el-form-item>
+                </el-form>
                 <el-button type="primary" @click="createPostDialogVisible=true">发布帖子</el-button>
                 <el-card class="post-card" v-for="post in postData" :key="post.id">
                     <template #header>
@@ -98,11 +106,30 @@
                                 <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }" @click="toggleLike(post)">
                                     {{ post.likes }} 赞
                                 </el-button>
+                                <el-button type="danger" plain @click="deletePostById(post.id)">删除该帖子</el-button>
                             </div>
                         </div>
                     </template>
                     <img :src="post.image" alt="Post Image" class="post-image" />
                     <div class="post-content">{{ post.content }}</div>
+                    <!-- 评论输入区域 -->
+                    <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
+                        <el-form-item prop="reviewContent">
+                            <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="addReview('commentForm', post.id)">发表评论</el-button>
+                        </el-form-item>
+                    </el-form>
+                    <!-- 评论列表 -->
+                    <div v-for="review in reviewData" :key="review.id" class="review-item">
+                        <div>
+                            <span>{{ review.username }}</span>：{{ review.content }}
+                        </div>
+                        <el-button icon="el-icon-thumbs" :class="{ 'is-active': review.isLiked }" @click="toggleCommentLike(comment)">
+                            {{ review.likes }} 赞
+                        </el-button>
+                    </div>
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -260,7 +287,7 @@
                 </el-upload>
                 <el-image v-if="form3.image" :src="form3.image" style="max-width: 100px; max-height: 100px;"></el-image>
             </el-form-item>
-            <el-form-item label="帖子内容" prop="postContent">
+            <el-form-item label="帖子内容" prop="content">
                 <el-input type="textarea" v-model="form3.content"></el-input>
             </el-form-item>
             <el-form-item>
@@ -342,6 +369,14 @@
                     plateName:'',
                     status:'0'
                 },
+                //评论数据
+                review:{
+                    id:'',
+                    content:'',
+                    postId:'',
+                    userId:'',
+                    likes:''
+                },
                 //表单数据
                 form: {
                     name: localStorage.getItem('username'),
@@ -352,16 +387,23 @@
                     checkPassword:''
                 },
                 form2: {
-                    plateName:''
+                    plateName:'',
+                    notice: ''
                 },
                 form3: {
                     content:'',
                     image:''
                 },
+                //发布评论表单
+                reviewForm:{
+                    reviewContent:''
+                },
                 //信息表格
                 infoData: [],
                 //帖子集合
                 postData: [],
+                //临时帖子集合
+                _postData: [],
                 //板块集合
                 plateDate: [],
                 //临时信息表格
@@ -395,8 +437,18 @@
                         { required: true, message: '板块名不能为空', trigger: 'blur' }
                     ],
                     //帖子内容
-                    postContent: [
-                        { required: true, message: '请输入内容', trigger: 'blur' }
+                    content: [
+                        { required: true, message: '请输入内容', trigger: 'blur' },
+                        { max: 250, message: '该帖子内容过长', trigger: 'blur' }
+                    ],
+                    //评论内容
+                    reviewContent: [
+                        { required: true, message: '评论内容不能为空', trigger: 'blur' },
+                        { max: 120, message: '评论内容过长', trigger: 'blur' }
+                    ],
+                    //板块公告内容
+                    notice: [
+                        { max: 250, message: '该公告内容过长', trigger: 'blur' }
                     ],
                     //图片
                     image: [
@@ -438,7 +490,10 @@
             },
             handleSuccess(res) {
                 if (res.success) {
-                    this.form3.image = res.data.headPortraitPath;
+                    this.form3.image = res.data.imagePath;
+
+                    console.log(this.form3.image);
+                    console.log(this.imageUrl);
                     this.$message({
                         type:'success',
                         message:'上传图片成功！'
@@ -480,6 +535,11 @@
             infoClick2(){
                 this.selectAllAudit();
                 this.infoDialogVisible = true;
+            },
+            //切换标签页事件
+            handleTab(){
+                this.selectPostByPlateId();
+                this.selectPlateById();
             },
             //修改昵称
             updateUsername() {
@@ -575,7 +635,7 @@
                     // 构建用户ID到用户名的映射对象
                     this.userMap = await this.buildUserMap(this._infoData);
                     // 替换userId为用户名
-                    this.replaceUserIdWithUsername();
+                    this.replaceUserIdWithUsername(this._infoData);
                     this.infoData = this._infoData;
                     console.log(this.userMap);
                     console.log(this.infoData);
@@ -594,7 +654,7 @@
                             url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
                             params: { id: info.userId }
                         });
-                        if (resp.data!== 'fail') {
+                        if (resp.data !== 'fail') {
                             userMap[info.userId] = resp.data.username;
                         }
                     } catch (error) {
@@ -604,9 +664,10 @@
                 return userMap;
             },
             //替换userId为用户名
-            replaceUserIdWithUsername() {
-                this._infoData.forEach(info => {
-                    console.log(this.userMap['2']);
+            replaceUserIdWithUsername(infoData) {
+                infoData.forEach(info => {
+                    console.log(this.userMap);
+                    console.log(this.userMap[2]);
                     info.username = this.userMap[info.userId] || '未知用户';
                 });
 
@@ -696,37 +757,164 @@
                 })
             },
             //切换标签页（根据plateId查询对应post）
-            selectPostByPlateId() {
-                axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/postServlet/selectPostByPlateId',
-                    params: {plateId : this.activeTab}
-                }).then(resp => {
+            async selectPostByPlateId() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/selectPostByPlateId',
+                        params: {plateId: this.activeTab}
+                    });
                     if (resp.data !== 'fail') {
                         //有数据
-                        this.postData = resp.data;
+                        this._postData = resp.data;
+                        //显示作者
+                        this.userMap = await this.buildUserMap(this._postData);
+                        this.replaceUserIdWithUsername(this._postData);
+                        this.postData = this._postData;
+                        console.log(this.userMap);
+                        console.log(this.postData);
                     } else {
                         //无数据
+                        this.postData = null;
                         //该板块暂无帖子
                         this.$notify.info({
                             title: '消息',
                             message: '该板块暂无帖子~'
                         });
                     }
-                })
+                } catch (error) {
+                    console.error('查询post时出错误', error);
+                }
             },
             //添加帖子
-            createPost(){
-
+            createPost(formName){
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        axios({
+                            method:'get',
+                            url:'http://localhost:8080/Technical-Forum/postServlet/addPost',
+                            params: {content : this.form3.content, image : this.form3.image, userId : this.user.id, plateId : this.activeTab}
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //添加成功
+                                //消息提示
+                                this.$message.success('发布帖子成功！');
+                                //关闭对话框
+                                this.handleClosePost();
+                                //重新加载数据
+                                this.selectPostByPlateId();
+                            }
+                        })
+                    } else {
+                        this.$message.warning('内容未填写完');
+                        return false;
+                    }
+                })
+            },
+            //修改板块公告
+            updatePlateNotice(){
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/plateServlet/updatePlateNotice',
+                    params: {plateId : this.activeTab, notice : this.form2.notice}
+                }).then(resp => {
+                    if (resp.data === 'success'){}
+                    //修改成功
+                    //消息提示
+                    this.$message.success('板块公告保存成功！');
+                })
+            },
+            //根据plateId查询notice
+            selectPlateById(){
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
+                    params: {plateId : this.activeTab}
+                }).then(resp => {
+                    if (resp.data !== 'fail'){
+                        //有数据
+                        this.form2.notice = resp.data.notice;
+                    }
+                })
+            },
+            //根据帖子id删除帖子
+            deletePostById(postId){
+                this.$confirm('确认删除该帖子吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/postServlet/deletePostById',
+                        data:postId
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //删除成功
+                            //消息提示
+                            this.$message.success('删除帖子成功！');
+                            //重新加载帖子数据
+                            this.selectPostByPlateId();
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
             },
             // 切换点赞状态
             toggleLike(post){
                 post.isLiked = !post.isLiked;
                 if (post.isLiked) {
-                    post.likes++;
+                    //执行增加点赞量的方法
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/postServlet/addPostLikesById',
+                        data:post.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //修改成功
+                            post.likes++;
+                        }
+                    })
                 } else {
-                    post.likes--;
+                    //执行增加点赞量的方法
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/postServlet/reducePostLikesById',
+                        data:post.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //修改成功
+                            post.likes--;
+                        }
+                    })
                 }
+            },
+            //发布评论
+            addReview(formName, postId) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        axios({
+                            method:'get',
+                            url:'http://localhost:8080/Technical-Forum/reviewServlet/addReview',
+                            params: {content : this.reviewForm.reviewContent, userId : this.user.id, postId : postId}
+                        }).then(resp => {
+                            if (resp.data === 'success'){
+                                //发布评论成功
+                                //消息提示
+                                this.$message.success('发表评论成功！');
+                                this.reviewForm.reviewContent = null;
+                                //重新加载评论数据
+                            }
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                })
             },
             // 切换收藏状态
             toggleFavorite(post){
