@@ -34,4 +34,10 @@ public interface PlateService {
      * @return
      */
     Plate selectById(Integer id);
+
+    /**
+     * 查询所有板块
+     * @return
+     */
+    List<Plate> selectAllPlate();
 }

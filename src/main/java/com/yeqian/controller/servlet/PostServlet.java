@@ -160,4 +160,22 @@ public class PostServlet extends BaseServlet {
         resp.getWriter().write("success");
     }
 
+    /**
+     * 增加帖子浏览量
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void addPostPageView(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //3.执行service方法
+        postService.addPostPageView(postId);
+        //4.响应数据
+        resp.getWriter().write("success");
+    }
+
 }

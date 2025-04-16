@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+·<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>用户界面</title>
+    <title>技术论坛</title>
     <style>
         .avatar-uploader .el-upload {
             border: 1px dashed #d9d9d9;
@@ -65,9 +65,9 @@
             background-color="#545c64"
             text-color="#fff"
             active-text-color="#ffd04b">
-        <el-menu-item index="1">主页</el-menu-item>
+        <el-menu-item index="1" @click="changeMenuHomePage">主页</el-menu-item>
 
-        <el-menu-item index="2">我的板块</el-menu-item>
+        <el-menu-item index="2" @click="changeMenuMyPlate">我的板块</el-menu-item>
 
         <el-menu-item index="3">个人信息中心</el-menu-item>
     </el-menu>
@@ -75,8 +75,35 @@
     <!--主页-->
     <div v-if="activeIndex === '1'">
         <h1>主页内容</h1>
-        <p>这里可以放置系统公告、常用功能快捷入口等。</p>
-
+        <el-tabs v-model="activeTab" @tab-click="handleHomePageTab">
+            <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
+                <el-button type="primary" @click="createPostDialogVisible=true">发布帖子</el-button>
+                <el-card class="post-card" v-for="post in postData" :key="post.id">
+                    <template #header>
+                        <div class="post-header">
+                            <span>{{ post.username }}</span>
+                            <div class="action-buttons">
+                                <!-- 浏览量显示 -->
+                                <span>{{ post.pageView }} 浏览</span>
+                                <!--收藏功能-->
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }" @click="toggleFavorite(post)">
+                                    {{ post.isFavorited ? '已收藏' : '收藏' }}
+                                </el-button>
+                                <!--点赞功能-->
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }" @click="toggleLike(post)">
+                                    {{ post.likes }} 赞
+                                </el-button>
+                                <!--举报帖子功能-->
+                                <el-button type="danger" plain @click="reportPost(post)">举报帖子</el-button>
+                            </div>
+                        </div>
+                    </template>
+                    <img :src="post.image" alt="Post Image" class="post-image" />
+                    <div class="post-content">{{ post.content }}</div>
+                    <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                </el-card>
+            </el-tab-pane>
+        </el-tabs>
 
     </div>
 
@@ -85,8 +112,8 @@
         <h1>我的板块</h1>
         <el-button type="primary" @click="createPlateDialogVisible=true">创建板块</el-button>
         <el-tabs v-model="activeTab" @tab-click="handleTab">
-            <el-tab-pane v-for="(plate, index) in plateDate" :key="index" :label="plate.name" :name="plate.id">
-                <el-form :model="form2" label-width="120px" :rules="rules">
+            <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
+                <el-form :model="form2" label-width="80px" :rules="rules">
                     <el-form-item label="板块公告" prop="notice">
                         <el-input type="textarea" v-model="form2.notice" ></el-input>
                     </el-form-item>
@@ -100,9 +127,13 @@
                         <div class="post-header">
                             <span>{{ post.username }}</span>
                             <div class="action-buttons">
+                                <!-- 浏览量显示 -->
+                                <span>{{ post.pageView }} 浏览</span>
+                                <!--收藏功能-->
                                 <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }" @click="toggleFavorite(post)">
                                     {{ post.isFavorited ? '已收藏' : '收藏' }}
                                 </el-button>
+                                <!--点赞功能-->
                                 <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }" @click="toggleLike(post)">
                                     {{ post.likes }} 赞
                                 </el-button>
@@ -112,24 +143,9 @@
                     </template>
                     <img :src="post.image" alt="Post Image" class="post-image" />
                     <div class="post-content">{{ post.content }}</div>
-                    <!-- 评论输入区域 -->
-                    <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
-                        <el-form-item prop="reviewContent">
-                            <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
-                        </el-form-item>
-                        <el-form-item>
-                            <el-button type="primary" @click="addReview('commentForm', post.id)">发表评论</el-button>
-                        </el-form-item>
-                    </el-form>
-                    <!-- 评论列表 -->
-                    <div v-for="review in reviewData" :key="review.id" class="review-item">
-                        <div>
-                            <span>{{ review.username }}</span>：{{ review.content }}
-                        </div>
-                        <el-button icon="el-icon-thumbs" :class="{ 'is-active': review.isLiked }" @click="toggleCommentLike(comment)">
-                            {{ review.likes }} 赞
-                        </el-button>
-                    </div>
+
+                    <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -154,12 +170,12 @@
             <el-image v-if="user.headPortrait" :src="user.headPortrait" class="avatar"></el-image>
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
-        <el-form :model="form" label-width="120px" :rules="rules">
+        <el-form ref='nameForm' :model="form" label-width="120px" :rules="rules">
             <el-form-item label="昵称" prop="name">
                 <el-input v-model="form.name" ></el-input>
             </el-form-item>
             <el-form-item>
-                <el-button type='primary' @click="updateUsername">保存</el-button>
+                <el-button type='primary' @click="updateUsername('nameForm')">保存</el-button>
             </el-form-item>
         </el-form>
         <el-button type='primary' @click="updateDialogVisible=true">设置密码</el-button>
@@ -296,6 +312,33 @@
             </el-form-item>
         </el-form>
     </el-dialog>
+
+    <!--评论对话框-->
+    <el-dialog
+            title="评论"
+            :visible.sync="reviewDialogVisible"
+            :before-close="handleCloseReview"
+            width="40%"
+    >
+        <!-- 评论输入区域 -->
+        <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
+            <el-form-item prop="reviewContent">
+                <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addReview">发表评论</el-button>
+            </el-form-item>
+        </el-form>
+        <!-- 评论列表 -->
+        <div v-for="review in reviewData" :key="review.id" class="review-item">
+            <div>
+                <span>{{ review.username }}</span>：{{ review.content }}
+            </div>
+            <el-button icon="el-icon-thumbs" :class="{ 'is-active': review.isLiked }" @click="toggleReviewLike(review)">
+                {{ review.likes }} 赞
+            </el-button>
+        </div>
+    </el-dialog>
 </div>
 
 <script src="js/vue.js"></script>
@@ -308,7 +351,7 @@
         el: '#app',
         mounted(){
             console.log(this.user.username);
-            this.selectPlateByUserId();
+            this.selectAllPlate();
         },
         data() {
             //制定密码规则
@@ -375,7 +418,8 @@
                     content:'',
                     postId:'',
                     userId:'',
-                    likes:''
+                    likes:'',
+                    isLiked:false
                 },
                 //表单数据
                 form: {
@@ -405,11 +449,15 @@
                 //临时帖子集合
                 _postData: [],
                 //板块集合
-                plateDate: [],
+                plateData: [],
                 //临时信息表格
                 _infoData: [],
+                //评论集合
+                reviewData: [],
+                //临时评论集合
+                _reviewData: [],
                 //导航菜单索引
-                activeIndex: '2',
+                activeIndex: '1',
                 //头像url路径
                 imageUrl: '',
                 //设置密码对话框
@@ -420,12 +468,18 @@
                 infoDialogVisible:false,
                 //发布帖子对话框
                 createPostDialogVisible:false,
+                //评论对话框
+                reviewDialogVisible:false,
                 //确认密码
                 checkPassword:'',
                 //用户ID到用户名的映射对象
                 userMap:{},
                 //标签导航
                 activeTab: '',
+                //主页标签导航
+                homePageActiveTab:'',
+                //临时帖子id
+                _postId:'',
                 //输入规则
                 rules: {
                     //昵称
@@ -531,31 +585,84 @@
             handleClosePost(){
                 this.createPostDialogVisible = false;
             },
+            handleCloseReview(){
+                this.reviewDialogVisible = false;
+                this.reviewData = null;
+            },
             //点击信息通知事件
             infoClick2(){
                 this.selectAllAudit();
                 this.infoDialogVisible = true;
             },
+            //切换至”主页“导航事件
+            changeMenuHomePage(){
+                this.activeTab = null;
+                this.plateData = null;
+                this.selectAllPlate();
+            },
+            //切换至”我的板块“导航事件
+            changeMenuMyPlate(){
+                this.activeTab = null;
+                this.plateData = null;
+                this.selectPlateByUserId();
+            },
             //切换标签页事件
-            handleTab(){
-                this.selectPostByPlateId();
-                this.selectPlateById();
+            async handleTab() {
+                //查询板块公告
+                this.selectPlateNoticeById();
+                try {
+                    //先查询帖子
+                    await this.selectPostByPlateId();
+                    //后查询收藏状态
+                    await this.selectFavoritePost(this.postData)
+                } catch (error) {
+                    console.error('切换标签页执行过程中出错:', error);
+                }
+            },
+            //主页切换标签页事件
+            async handleHomePageTab() {
+                this.selectAllPlate();
+                try {
+                    //先查询帖子
+                    await this.selectPostByPlateId();
+                    //后查询收藏状态
+                    await this.selectFavoritePost(this.postData)
+                } catch (error) {
+                    console.error('切换标签页执行过程中出错:', error);
+                }
+            },
+            //打开评论
+            checkReview(post){
+                this._postId = post.id;
+                this.reviewDialogVisible = true;
+                //查询帖子对应的评论
+                this.selectReviewByPostId(post.id);
+                //增加浏览量
+                this.addPostPageView(post);
             },
             //修改昵称
-            updateUsername() {
-                this.user.username = this.form.name;
-                //使用 axios 发送请求
-                axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/userServlet/updateUsername?'
-                    + "username=" + this.user.username + "&id=" + this.user.id
-                }).then(resp => {
-                    if (resp.data === 'success') {
-                        //修改成功
-                        localStorage.setItem("username", this.user.username)
-                        this.$message.success('昵称保存成功');
+            updateUsername(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid){
+                        this.user.username = this.form.name;
+                        //使用 axios 发送请求
+                        axios({
+                            method:'get',
+                            url:'http://localhost:8080/Technical-Forum/userServlet/updateUsername?'
+                                + "username=" + this.user.username + "&id=" + this.user.id
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //修改成功
+                                localStorage.setItem("username", this.user.username)
+                                this.$message.success('昵称保存成功');
+                            }
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
                     }
                 })
+
             },
             //修改密码
             updatePassword(formName){
@@ -665,9 +772,9 @@
             },
             //替换userId为用户名
             replaceUserIdWithUsername(infoData) {
-                infoData.forEach(info => {
-                    console.log(this.userMap);
-                    console.log(this.userMap[2]);
+                infoData.forEach(info => {console.log(this.userMap);
+                    // console.log(this.userMap[2]);
+                    //
                     info.username = this.userMap[info.userId] || '未知用户';
                 });
 
@@ -746,7 +853,7 @@
                 }).then(resp => {
                     if (resp.data !== 'fail'){
                         //有数据
-                        this.plateDate = resp.data;
+                        this.plateData = resp.data;
                     } else {
                         //无数据
                         this.$notify.info({
@@ -756,7 +863,7 @@
                     }
                 })
             },
-            //切换标签页（根据plateId查询对应post）
+            //根据plateId查询对应post
             async selectPostByPlateId() {
                 try {
                     const resp = await axios({
@@ -771,8 +878,6 @@
                         this.userMap = await this.buildUserMap(this._postData);
                         this.replaceUserIdWithUsername(this._postData);
                         this.postData = this._postData;
-                        console.log(this.userMap);
-                        console.log(this.postData);
                     } else {
                         //无数据
                         this.postData = null;
@@ -825,7 +930,7 @@
                 })
             },
             //根据plateId查询notice
-            selectPlateById(){
+            selectPlateNoticeById(){
                 axios({
                     method:'get',
                     url:'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
@@ -893,32 +998,149 @@
                     })
                 }
             },
+            //切换评论点赞状态
+            toggleReviewLike(review){
+                review.isLiked = !review.isLiked;
+                if (review.isLiked) {
+                    //执行增加评论点赞量的方法
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/reviewServlet/addReviewLikesById',
+                        data:review.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //修改成功
+                            review.likes++;
+                        }
+                    })
+                } else {
+                    //执行增加评论点赞量的方法
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/reviewServlet/reduceReviewLikesById',
+                        data:review.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //修改成功
+                            review.likes--;
+                        }
+                    })
+                }
+            },
             //发布评论
-            addReview(formName, postId) {
-                this.$refs[formName].validate((valid) => {
-                    if (valid) {
-                        axios({
-                            method:'get',
-                            url:'http://localhost:8080/Technical-Forum/reviewServlet/addReview',
-                            params: {content : this.reviewForm.reviewContent, userId : this.user.id, postId : postId}
-                        }).then(resp => {
-                            if (resp.data === 'success'){
-                                //发布评论成功
-                                //消息提示
-                                this.$message.success('发表评论成功！');
-                                this.reviewForm.reviewContent = null;
-                                //重新加载评论数据
-                            }
-                        })
-                    } else {
-                        console.log('error submit!!');
-                        return false;
+            addReview() {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/reviewServlet/addReview',
+                    params: {content : this.reviewForm.reviewContent, userId : this.user.id, postId : this._postId}
+                }).then(resp => {
+                    if (resp.data === 'success'){
+                        //发布评论成功
+                        //消息提示
+                        this.$message.success('发表评论成功！');
+                        this.reviewForm.reviewContent = null;
+                        //重新加载评论数据
+                        this.selectReviewByPostId(this._postId);
+                    } else if(resp.data === 'fail') {
+                        //输入内容为空
+                        this.$message.warning('评论内容不能为空');
                     }
                 })
             },
+            //根据postId查询对应review
+            async selectReviewByPostId(postId){
+                const resp = await axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewByPostId',
+                    data: postId
+                });
+                if (resp.data !== 'fail') {
+                    //有评论
+                    // 查询成功
+                    this._reviewData = resp.data;
+                    // 构建用户ID到用户名的映射对象
+                    this.userMap = await this.buildUserMap(this._reviewData);
+                    // 替换userId为用户名
+                    this.replaceUserIdWithUsername(this._reviewData);
+                    this.reviewData = this._reviewData;
+                } else {
+                    this.$message.info('该帖子暂无评论');
+                }
+            },
+            //查询帖子收藏状态
+            async selectFavoritePost(postData){
+                postData.forEach(post => {
+                    axios({
+                        method:'get',
+                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/selectFavoritePost',
+                        params: {userId : this.user.id, postId : post.id}
+                    }).then(resp => {
+                        post.isFavorited = resp.data !== 'fail';
+                        this.$forceUpdate();
+                    })
+                })
+                console.log(postData);
+            },
             // 切换收藏状态
             toggleFavorite(post){
+                //console.log('Before update:', post.isFavorited);
                 post.isFavorited = !post.isFavorited;
+                this.$forceUpdate();
+                //console.log('After update:', post.isFavorited);
+
+                if (post.isFavorited) {
+                    //用户点击了收藏
+                    axios({
+                        method:'get',
+                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/addFavoritePost',
+                        params: {userId : this.user.id, postId : post.id}
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //增加收藏成功
+                            //消息提示
+                            this.$message.success('收藏成功！');
+                        }
+                    })
+                } else {
+                    //用户取消了收藏
+                    axios({
+                        method:'get',
+                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/deleteFavoritePost',
+                        params: {userId : this.user.id, postId: post.id}
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //取消收藏成功
+                            //消息提示
+                            this.$message.success('已取消收藏！');
+                        }
+                    })
+                }
+
+            },
+            //增加帖子浏览量
+            addPostPageView(post) {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/postServlet/addPostPageView',
+                    data: post.id
+                }).then(resp => {
+                    if (resp.data === 'success'){
+                        //增加浏览量成功
+                        post.pageView++;
+                    }
+                })
+            },
+            //查询所有板块
+            selectAllPlate() {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/plateServlet/selectAllPlate'
+                }).then(resp => {
+                    if (resp.data !== 'fail') {
+                        //有板块数据
+                        this.plateData = resp.data;
+                    }
+                })
             }
         }
     })

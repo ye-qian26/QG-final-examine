@@ -31,4 +31,9 @@ public class PlateServiceImpl implements PlateService {
     public Plate selectById(Integer id) {
         return plateMapper.selectById(id);
     }
+
+    @Override
+    public List<Plate> selectAllPlate() {
+        return plateMapper.selectAllPlate();
+    }
 }

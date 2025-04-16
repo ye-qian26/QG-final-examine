@@ -98,4 +98,22 @@ public class PlateServlet extends BaseServlet {
             resp.getWriter().write("fail");
         }
     }
+
+    /**
+     * 查询所有板块
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectAllPlate(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.执行service方法
+        List<Plate> plates = plateService.selectAllPlate();
+        //2.响应数据
+        if (plates != null && !plates.isEmpty()) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(plates));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
 }

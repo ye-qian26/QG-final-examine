@@ -38,4 +38,10 @@ public interface PostService {
      * @param id
      */
     void reducePostLikesById(Integer id);
+
+    /**
+     * 增加帖子浏览量
+     * @param id
+     */
+    void addPostPageView(Integer id);
 }

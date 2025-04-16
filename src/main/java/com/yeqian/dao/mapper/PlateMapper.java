@@ -42,4 +42,11 @@ public interface PlateMapper {
      */
     @Select("select * from plate where id = #{id}")
     Plate selectById(@Param("id") Integer id);
+
+    /**
+     * 查询所有板块
+     * @return
+     */
+    @Select("select * from plate")
+    List<Plate> selectAllPlate();
 }

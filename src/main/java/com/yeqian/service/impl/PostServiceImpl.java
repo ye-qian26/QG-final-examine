@@ -34,4 +34,9 @@ public class PostServiceImpl implements PostService {
     public void reducePostLikesById(Integer id) {
         postMapper.reducePostLikesById(id);
     }
+
+    @Override
+    public void addPostPageView(Integer id) {
+        postMapper.addPostPageView(id);
+    }
 }
