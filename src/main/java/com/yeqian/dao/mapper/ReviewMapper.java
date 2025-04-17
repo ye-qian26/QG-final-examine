@@ -1,10 +1,7 @@
 package com.yeqian.dao.mapper;
 
 import com.yeqian.pojo.Review;
-import com.yeqian.util.mybatis.annotations.Insert;
-import com.yeqian.util.mybatis.annotations.Param;
-import com.yeqian.util.mybatis.annotations.Select;
-import com.yeqian.util.mybatis.annotations.Update;
+import com.yeqian.util.mybatis.annotations.*;
 
 import java.util.List;
 
@@ -40,4 +37,11 @@ public interface ReviewMapper {
      */
     @Update("update review set likes = likes - 1 where id = #{id}")
     void reduceReviewLikesById(@Param("id") Integer id);
+
+    /**
+     * 根据 帖子id 删除 评论
+     * @param postId
+     */
+    @Delete("delete from review where post_id = #{postId}")
+    void deleteByPostId(@Param("postId") Integer postId);
 }

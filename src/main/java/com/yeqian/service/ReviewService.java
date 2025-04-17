@@ -1,10 +1,7 @@
 package com.yeqian.service;
 
 import com.yeqian.pojo.Review;
-import com.yeqian.util.mybatis.annotations.Insert;
-import com.yeqian.util.mybatis.annotations.Param;
-import com.yeqian.util.mybatis.annotations.Select;
-import com.yeqian.util.mybatis.annotations.Update;
+import com.yeqian.util.mybatis.annotations.*;
 
 import java.util.List;
 
@@ -36,4 +33,10 @@ public interface ReviewService {
      * @param id
      */
     void reduceReviewLikesById(Integer id);
+
+    /**
+     * 根据 帖子id 删除 评论
+     * @param postId
+     */
+    void deleteByPostId(Integer postId);
 }

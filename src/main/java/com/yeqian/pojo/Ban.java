@@ -6,13 +6,23 @@ package com.yeqian.pojo;
 public class Ban {
     private Integer id;
     private Integer userId;
+    private Integer plateId;
 
     public Ban() {
     }
 
-    public Ban(Integer id, Integer userId) {
+    public Ban(Integer id, Integer userId, Integer plateId) {
         this.id = id;
         this.userId = userId;
+        this.plateId = plateId;
+    }
+
+    public Integer getPlateId() {
+        return plateId;
+    }
+
+    public void setPlateId(Integer plateId) {
+        this.plateId = plateId;
     }
 
     public Integer getId() {
@@ -36,6 +46,7 @@ public class Ban {
         return "Ban{" +
                 "id=" + id +
                 ", userId=" + userId +
+                ", plateId=" + plateId +
                 '}';
     }
 }

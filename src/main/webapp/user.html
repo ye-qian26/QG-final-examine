@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-·<html lang="en">
+·
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>技术论坛</title>
@@ -11,9 +12,11 @@
             position: relative;
             overflow: hidden;
         }
+
         .avatar-uploader .el-upload:hover {
             border-color: #409EFF;
         }
+
         .avatar-uploader-icon {
             font-size: 28px;
             color: #8c939d;
@@ -22,11 +25,13 @@
             line-height: 178px;
             text-align: center;
         }
+
         .avatar {
             width: 178px;
             height: 178px;
             display: block;
         }
+
         .post-card {
             margin-bottom: 20px;
         }
@@ -77,7 +82,8 @@
         <h1>主页内容</h1>
         <el-tabs v-model="activeTab" @tab-click="handleHomePageTab">
             <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
-                <el-button type="primary" @click="createPostDialogVisible=true">发布帖子</el-button>
+                公告： <span>{{ plate.notice }}</span><br>
+                <el-button type="primary" @click="issuePost">发布帖子</el-button>
                 <el-card class="post-card" v-for="post in postData" :key="post.id">
                     <template #header>
                         <div class="post-header">
@@ -86,19 +92,21 @@
                                 <!-- 浏览量显示 -->
                                 <span>{{ post.pageView }} 浏览</span>
                                 <!--收藏功能-->
-                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }" @click="toggleFavorite(post)">
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                           @click="toggleFavorite(post)">
                                     {{ post.isFavorited ? '已收藏' : '收藏' }}
                                 </el-button>
                                 <!--点赞功能-->
-                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }" @click="toggleLike(post)">
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                           @click="toggleLike(post)">
                                     {{ post.likes }} 赞
                                 </el-button>
                                 <!--举报帖子功能-->
-                                <el-button type="danger" plain @click="reportPost(post)">举报帖子</el-button>
+                                <el-button type="danger" plain @click="reportPostClick(post)">举报帖子</el-button>
                             </div>
                         </div>
                     </template>
-                    <img :src="post.image" alt="Post Image" class="post-image" />
+                    <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
                 </el-card>
@@ -115,7 +123,7 @@
             <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
                 <el-form :model="form2" label-width="80px" :rules="rules">
                     <el-form-item label="板块公告" prop="notice">
-                        <el-input type="textarea" v-model="form2.notice" ></el-input>
+                        <el-input type="textarea" v-model="form2.notice"></el-input>
                     </el-form-item>
                     <el-form-item>
                         <el-button type='primary' @click="updatePlateNotice">保存</el-button>
@@ -130,18 +138,20 @@
                                 <!-- 浏览量显示 -->
                                 <span>{{ post.pageView }} 浏览</span>
                                 <!--收藏功能-->
-                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }" @click="toggleFavorite(post)">
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                           @click="toggleFavorite(post)">
                                     {{ post.isFavorited ? '已收藏' : '收藏' }}
                                 </el-button>
                                 <!--点赞功能-->
-                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }" @click="toggleLike(post)">
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                           @click="toggleLike(post)">
                                     {{ post.likes }} 赞
                                 </el-button>
-                                <el-button type="danger" plain @click="deletePostById(post.id)">删除该帖子</el-button>
+                                <el-button type="danger" plain @click="deletePost(post)">删除该帖子</el-button>
                             </div>
                         </div>
                     </template>
-                    <img :src="post.image" alt="Post Image" class="post-image" />
+                    <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
 
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
@@ -170,23 +180,23 @@
             <el-image v-if="user.headPortrait" :src="user.headPortrait" class="avatar"></el-image>
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
         </el-upload>
-        <el-form ref='nameForm' :model="form" label-width="120px" :rules="rules">
+        <el-form ref='nameForm' :model="form" label-width="60px" :rules="rules">
             <el-form-item label="昵称" prop="name">
-                <el-input v-model="form.name" ></el-input>
+                <el-input v-model="form.name"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type='primary' @click="updateUsername('nameForm')">保存</el-button>
             </el-form-item>
         </el-form>
         <el-button type='primary' @click="updateDialogVisible=true">设置密码</el-button>
-        <div v-if="user.role==='1'">
-            <!--普通用户-->
-            <el-button type="info" @click="infoClick1">信息通知</el-button>
-        </div>
-        <div v-else-if="user.role==='2'">
+
+        <!--帖子举报信息通知-->
+        <el-button type="info" @click="infoClick1">帖子举报信息通知</el-button>
+        <div v-if="user.role==='2'">
             <!--管理员-->
-            <el-button type="info" @click="infoClick2">信息通知</el-button>
+            <el-button type="info" @click="infoClick2">用户申请信息</el-button>
         </div>
+
     </div>
 
     <!--设置密码对话框-->
@@ -205,10 +215,12 @@
                 <el-input placeholder="填写原密码" v-model="form.password" show-password></el-input>
             </el-form-item>
             <el-form-item label="新密码" prop="newPassword">
-                <el-input placeholder="填写新密码" type="password" v-model="form.newPassword" autocomplete="off"></el-input>
+                <el-input placeholder="填写新密码" type="password" v-model="form.newPassword"
+                          autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item label="确认密码" prop="checkPassword">
-                <el-input placeholder="再次填写确认" type="password" v-model="form.checkPassword" autocomplete="off"></el-input>
+                <el-input placeholder="再次填写确认" type="password" v-model="form.checkPassword"
+                          autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="updatePassword('form1')">提交</el-button>
@@ -339,6 +351,75 @@
             </el-button>
         </div>
     </el-dialog>
+
+
+    <!--举报帖子对话框-->
+    <el-dialog
+            title="举报帖子"
+            :visible.sync="reportPostDialogVisible"
+            :before-close="handleCloseReportPost"
+            width="40%"
+    >
+        <el-form ref="reportPostForm" :model="reportPostForm" :rules="rules" label-width="80px">
+
+            <el-form-item label="举报内容" prop="reportContent">
+                <el-input type="textarea" v-model="reportPostForm.reportContent"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addReportPost('reportPostForm')">提交</el-button>
+                <el-button @click="handleCloseReportPost">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <!-- 帖子举报信息通知对话框 -->
+    <el-dialog
+            title="帖子举报信息"
+            :visible.sync="reportPostInfoDialogVisible"
+            :before-close="handleCloseReportPostInfo"
+            width="40%"
+    >
+        <!-- 帖子举报信息列表 -->
+        <div v-for="reportedPost in reportedPostData" :key="reportedPost.id" class="reportedPost-item">
+            <div>
+                <span>举报内容</span>：{{ reportedPost.reportContent }}
+                <el-button type="success" @click="deleteReportedPostById(reportedPost.id)">忽略</el-button>
+            </div>
+            <el-link type="primary" @click="checkReportedPost(reportedPost)">查看帖子信息</el-link>
+        </div>
+    </el-dialog>
+
+    <!-- 帖子详情对话框 -->
+    <el-dialog
+            title="帖子详情"
+            :visible.sync="postDetailsDialogVisible"
+            :before-close="handleClosePostDetails"
+            width="50%"
+    >
+        <el-card class="post-card" v-for="post in detailPostData" :key="post.id">
+            <template #header>
+                <div class="post-header">
+                    <span>{{ post.username }}</span>
+                    <div class="action-buttons">
+                        <!-- 浏览量显示 -->
+                        <span>{{ post.pageView }} 浏览</span>
+                        <div v-if="post.isUserBaned">
+                            <el-button type="success" @click="unseal(post)">用户已封禁</el-button>
+                        </div>
+                        <div v-else>
+                            <el-button type="primary" @click="addBan(post)">封禁用户</el-button>
+                        </div>
+                        <el-button type="danger" plain @click="deletePost(post)">删除该帖子</el-button>
+                    </div>
+                </div>
+            </template>
+            <img :src="post.image" alt="Post Image" class="post-image"/>
+            <div class="post-content">{{ post.content }}</div>
+
+            <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+
+        </el-card>
+    </el-dialog>
 </div>
 
 <script src="js/vue.js"></script>
@@ -347,9 +428,10 @@
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
+
     new Vue({
         el: '#app',
-        mounted(){
+        mounted() {
             console.log(this.user.username);
             this.selectAllPlate();
         },
@@ -382,44 +464,60 @@
                     tele: localStorage.getItem('tele'),
                     password: '',
                     headPortrait: localStorage.getItem('headPortrait'),
-                    role: localStorage.getItem('role')
+                    role: localStorage.getItem('role'),
+                    isBaned: false
                 },
                 //板块数据
-                plate:{
-                    id:'',
-                    name:'',
-                    userId:'',
-                    notice:'',
-                    pageView:'',
-                    likes:''
+                plate: {
+                    id: '',
+                    name: '',
+                    userId: '',
+                    notice: '',
+                    pageView: '',
+                    likes: ''
                 },
                 //帖子数据
-                post:{
-                    id:'',
-                    content:'',
-                    image:'',
-                    pageView:'',
-                    likes:'',
-                    plateId:'',
-                    userId:'',
+                post: {
+                    id: '',
+                    content: '',
+                    image: '',
+                    pageView: '',
+                    likes: '',
+                    plateId: '',
+                    userId: '',
                     isLiked: false,
-                    isFavorited: false
+                    isFavorited: false,
+                    isUserBaned: false
                 },
                 //申请数据
-                audit:{
-                    id:'',
-                    userId:'',
-                    plateName:'',
-                    status:'0'
+                audit: {
+                    id: '',
+                    userId: '',
+                    plateName: '',
+                    status: '0'
                 },
                 //评论数据
-                review:{
-                    id:'',
-                    content:'',
-                    postId:'',
-                    userId:'',
-                    likes:'',
-                    isLiked:false
+                review: {
+                    id: '',
+                    content: '',
+                    postId: '',
+                    userId: '',
+                    likes: '',
+                    isLiked: false
+                },
+                //举报帖子数据
+                reportedPost: {
+                    id: '',
+                    userId: '',
+                    plateId: '',
+                    postId: '',
+                    reportContent: ''
+                },
+                //封禁数据
+                ban: {
+                    id: '',
+                    userId: '',
+                    plateId: ''
                 },
                 //表单数据
                 form: {
@@ -427,20 +525,24 @@
                     tele: localStorage.getItem('tele'),
                     role: localStorage.getItem('role'),
                     password: '',
-                    newPassword:'',
-                    checkPassword:''
+                    newPassword: '',
+                    checkPassword: ''
                 },
                 form2: {
-                    plateName:'',
+                    plateName: '',
                     notice: ''
                 },
                 form3: {
-                    content:'',
-                    image:''
+                    content: '',
+                    image: ''
                 },
                 //发布评论表单
-                reviewForm:{
-                    reviewContent:''
+                reviewForm: {
+                    reviewContent: ''
+                },
+                //举报帖子表单
+                reportPostForm: {
+                    reportContent: ''
                 },
                 //信息表格
                 infoData: [],
@@ -456,71 +558,86 @@
                 reviewData: [],
                 //临时评论集合
                 _reviewData: [],
+                //帖子详情
+                detailPostData: [],
+                //举报帖子信息集合
+                reportedPostData: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
                 imageUrl: '',
                 //设置密码对话框
-                updateDialogVisible:false,
+                updateDialogVisible: false,
                 //创建板块对话框
-                createPlateDialogVisible:false,
+                createPlateDialogVisible: false,
                 //信息通知对话框
-                infoDialogVisible:false,
+                infoDialogVisible: false,
                 //发布帖子对话框
-                createPostDialogVisible:false,
+                createPostDialogVisible: false,
                 //评论对话框
-                reviewDialogVisible:false,
+                reviewDialogVisible: false,
+                //举报帖子对话框
+                reportPostDialogVisible: false,
+                //帖子举报信息对话框
+                reportPostInfoDialogVisible: false,
+                //帖子详情对话框
+                postDetailsDialogVisible: false,
                 //确认密码
-                checkPassword:'',
+                checkPassword: '',
                 //用户ID到用户名的映射对象
-                userMap:{},
+                userMap: {},
                 //标签导航
                 activeTab: '',
                 //主页标签导航
-                homePageActiveTab:'',
+                homePageActiveTab: '',
                 //临时帖子id
-                _postId:'',
+                _postId: '',
                 //输入规则
                 rules: {
                     //昵称
                     name: [
-                        { required: true, message: '请输入昵称', trigger: 'blur' }
+                        {required: true, message: '请输入昵称', trigger: 'blur'}
                     ],
                     //板块名
                     plateName: [
-                        { required: true, message: '板块名不能为空', trigger: 'blur' }
+                        {required: true, message: '板块名不能为空', trigger: 'blur'}
                     ],
                     //帖子内容
                     content: [
-                        { required: true, message: '请输入内容', trigger: 'blur' },
-                        { max: 250, message: '该帖子内容过长', trigger: 'blur' }
+                        {required: true, message: '请输入帖子内容', trigger: 'blur'},
+                        {max: 250, message: '该帖子内容过长', trigger: 'blur'}
+                    ],
+                    //举报帖子内容
+                    reportContent: [
+                        {required: true, message: '举报内容不能为空', trigger: 'blur'},
+                        {max: 40, message: '举报内容过长', trigger: 'blur'}
                     ],
                     //评论内容
                     reviewContent: [
-                        { required: true, message: '评论内容不能为空', trigger: 'blur' },
-                        { max: 120, message: '评论内容过长', trigger: 'blur' }
+                        {required: true, message: '评论内容不能为空', trigger: 'blur'},
+                        {max: 120, message: '评论内容过长', trigger: 'blur'}
                     ],
                     //板块公告内容
                     notice: [
-                        { max: 250, message: '该公告内容过长', trigger: 'blur' }
+                        {max: 250, message: '该公告内容过长', trigger: 'blur'}
                     ],
                     //图片
                     image: [
-                        { required: true, message: '请上传图片', trigger: 'blur' }
+                        {required: true, message: '请上传图片', trigger: 'blur'}
                     ],
                     //密码规则
                     password: [
-                        { required: true, message: '请输入密码', trigger: 'blur' },
-                        { min: 8, max: 12, message: '长度需在8到12个字符之间', trigger: 'blur'}
+                        {required: true, message: '请输入密码', trigger: 'blur'},
+                        {min: 8, max: 12, message: '长度需在8到12个字符之间', trigger: 'blur'}
                     ],
                     //密码规则
                     newPassword: [
-                        { min: 8, max: 12, message: '长度需在8到12个字符之间', trigger: 'blur'},
-                        { validator: validatePass, trigger: 'blur' }
+                        {min: 8, max: 12, message: '长度需在8到12个字符之间', trigger: 'blur'},
+                        {validator: validatePass, trigger: 'blur'}
                     ],
                     //再次输入密码规则
                     checkPassword: [
-                        { validator: validatePass2, trigger: 'blur'}
+                        {validator: validatePass2, trigger: 'blur'}
                     ]
                 },
             }
@@ -535,8 +652,8 @@
                     //改变localStorage里面存储的信息
                     localStorage.setItem("headPortrait", this.user.headPortrait)
                     this.$message({
-                        type:'success',
-                        message:'上传头像成功！'
+                        type: 'success',
+                        message: '上传头像成功！'
                     })
                 } else {
                     this.$message.error('上传头像失败，请稍后再试');
@@ -549,8 +666,8 @@
                     console.log(this.form3.image);
                     console.log(this.imageUrl);
                     this.$message({
-                        type:'success',
-                        message:'上传图片成功！'
+                        type: 'success',
+                        message: '上传图片成功！'
                     })
                 } else {
                     this.$message.error('上传图片失败，请稍后再试');
@@ -569,39 +686,54 @@
                 return isJPG && isLt2M;
             },
             //关闭对话框
-            handleClosePwd(){
+            handleClosePwd() {
                 this.updateDialogVisible = false;
                 //重置表单中的密码信息
                 this.form.password = '';
                 this.form.newPassword = '';
                 this.form.checkPassword = '';
             },
-            handleCloseInfo(){
+            handleCloseInfo() {
                 this.infoDialogVisible = false;
             },
-            handleClosePlate(){
+            handleClosePlate() {
                 this.createPlateDialogVisible = false;
             },
-            handleClosePost(){
+            handleClosePost() {
                 this.createPostDialogVisible = false;
             },
-            handleCloseReview(){
+            handleCloseReview() {
                 this.reviewDialogVisible = false;
                 this.reviewData = null;
             },
+            handleCloseReportPost() {
+                this.reportPostDialogVisible = false;
+                this.reportPostForm.reportContent = null;
+            },
+            handleCloseReportPostInfo() {
+                this.reportPostInfoDialogVisible = false;
+            },
+            handleClosePostDetails() {
+                this.postDetailsDialogVisible = false;
+            },
+            //点击举报帖子信息事件
+            infoClick1() {
+                this.selectReportedPostByUserId();
+                this.reportPostInfoDialogVisible = true;
+            },
             //点击信息通知事件
-            infoClick2(){
+            infoClick2() {
                 this.selectAllAudit();
                 this.infoDialogVisible = true;
             },
             //切换至”主页“导航事件
-            changeMenuHomePage(){
+            changeMenuHomePage() {
                 this.activeTab = null;
                 this.plateData = null;
                 this.selectAllPlate();
             },
             //切换至”我的板块“导航事件
-            changeMenuMyPlate(){
+            changeMenuMyPlate() {
                 this.activeTab = null;
                 this.plateData = null;
                 this.selectPlateByUserId();
@@ -632,7 +764,7 @@
                 }
             },
             //打开评论
-            checkReview(post){
+            checkReview(post) {
                 this._postId = post.id;
                 this.reviewDialogVisible = true;
                 //查询帖子对应的评论
@@ -640,15 +772,23 @@
                 //增加浏览量
                 this.addPostPageView(post);
             },
+            //查看帖子详情
+            async checkReportedPost(reportedPost) {
+                this._postId = reportedPost.postId;
+                await this.selectPostById();
+                await this.selectBanByUserIdAndPlateId(this.detailPostData[0].userId, this.detailPostData[0].plateId);
+                console.log(this.ban);
+                this.postDetailsDialogVisible = true;
+            },
             //修改昵称
             updateUsername(formName) {
                 this.$refs[formName].validate((valid) => {
-                    if (valid){
+                    if (valid) {
                         this.user.username = this.form.name;
                         //使用 axios 发送请求
                         axios({
-                            method:'get',
-                            url:'http://localhost:8080/Technical-Forum/userServlet/updateUsername?'
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/userServlet/updateUsername?'
                                 + "username=" + this.user.username + "&id=" + this.user.id
                         }).then(resp => {
                             if (resp.data === 'success') {
@@ -665,24 +805,24 @@
 
             },
             //修改密码
-            updatePassword(formName){
+            updatePassword(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         //判断原密码是否正确
                         axios({
-                            method:'get',
-                            url:'http://localhost:8080/Technical-Forum/userServlet/loginUser?'
-                            + "tele=" + this.user.tele + "&password=" + this.form.password
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/userServlet/loginUser?'
+                                + "tele=" + this.user.tele + "&password=" + this.form.password
                         }).then(resp => {
-                            if (resp.data !== 'fail'){
+                            if (resp.data !== 'fail') {
                                 //原密码正确
                                 //修改密码
                                 axios({
-                                    method:'get',
-                                    url:'http://localhost:8080/Technical-Forum/userServlet/updateUserPassword?'
-                                    + "password=" + this.form.newPassword + "&id=" + this.user.id
+                                    method: 'get',
+                                    url: 'http://localhost:8080/Technical-Forum/userServlet/updateUserPassword?'
+                                        + "password=" + this.form.newPassword + "&id=" + this.user.id
                                 }).then(resp => {
-                                    if (resp.data === 'success'){
+                                    if (resp.data === 'success') {
                                         //修改成功
                                         this.$message.success('设置密码成功！');
                                     } else {
@@ -698,25 +838,25 @@
                             }
                         })
 
-                    }else {
+                    } else {
                         console.log('error submit!!');
                         return false;
                     }
                 })
             },
             //用户创建板块
-            createPlate(formName){
+            createPlate(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         //存储到申请表中，等待管理员审核
                         this.audit.userId = this.user.id;
                         this.audit.plateName = this.form2.plateName;
                         axios({
-                            method:'post',
-                            url:'http://localhost:8080/Technical-Forum/auditServlet/addAudit',
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/auditServlet/addAudit',
                             data: this.audit
                         }).then(resp => {
-                            if (resp.data === 'success'){
+                            if (resp.data === 'success') {
                                 //添加成功
                                 //消息提示
                                 this.$message.success('已发送申请，请等待系统管理员审核...');
@@ -731,7 +871,7 @@
                 })
             },
             //查询所有申请
-            async selectAllAudit(){
+            async selectAllAudit() {
                 try {
                     const resp = await axios({
                         method: 'get',
@@ -759,7 +899,7 @@
                             //发送ajax请求
                             method: 'get',
                             url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
-                            params: { id: info.userId }
+                            params: {id: info.userId}
                         });
                         if (resp.data !== 'fail') {
                             userMap[info.userId] = resp.data.username;
@@ -772,7 +912,8 @@
             },
             //替换userId为用户名
             replaceUserIdWithUsername(infoData) {
-                infoData.forEach(info => {console.log(this.userMap);
+                infoData.forEach(info => {
+                    console.log(this.userMap);
                     // console.log(this.userMap[2]);
                     //
                     info.username = this.userMap[info.userId] || '未知用户';
@@ -780,16 +921,16 @@
 
             },
             //管理员允许创建板块
-            allowAudit(row){
+            allowAudit(row) {
                 this.$confirm('确定允许该用户创建对应板块吗?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
                 }).then(() => {
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/plateServlet/addPlate',
-                        params: {userId : row.userId, name : row.plateName}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/addPlate',
+                        params: {userId: row.userId, name: row.plateName}
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //板块创建成功
@@ -805,18 +946,18 @@
                 });
             },
             //删除申请信息
-            deleteAuditById(row){
+            deleteAuditById(row) {
                 this.$confirm('确认清理该数据吗?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
                 }).then(() => {
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/auditServlet/deleteAuditById',
-                        params: {id : row.id}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/auditServlet/deleteAuditById',
+                        params: {id: row.id}
                     }).then(resp => {
-                        if (resp.data === 'success'){
+                        if (resp.data === 'success') {
                             //删除成功
                             this.$message.success('清理成功！')
                             //重新加载信息表格
@@ -831,13 +972,13 @@
                 });
             },
             //修改申请状态
-            updateAuditStatus(id){
+            updateAuditStatus(id) {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/auditServlet/updateAuditStatus',
-                    params: {id : id}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/auditServlet/updateAuditStatus',
+                    params: {id: id}
                 }).then(resp => {
-                    if(resp.data === 'success'){
+                    if (resp.data === 'success') {
                         //修改成功
                         //重新加载信息表格
                         this.selectAllAudit();
@@ -845,13 +986,13 @@
                 })
             },
             //通过用户id查询板块
-            selectPlateByUserId(){
+            selectPlateByUserId() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByUserId',
-                    params:{userId : this.user.id}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByUserId',
+                    params: {userId: this.user.id}
                 }).then(resp => {
-                    if (resp.data !== 'fail'){
+                    if (resp.data !== 'fail') {
                         //有数据
                         this.plateData = resp.data;
                     } else {
@@ -891,14 +1032,28 @@
                     console.error('查询post时出错误', error);
                 }
             },
+            //发布帖子
+            async issuePost(){
+                //判断用户是否被封禁
+                await this.selectBanByUserIdAndPlateId(this.user.id, this.activeTab);
+                if (this.user.isBaned) {
+                    //用户在此板块已被封禁
+                    this.$message.warning('您在此板块已被版主封禁，无法发帖');
+                } else this.createPostDialogVisible=true;
+            },
             //添加帖子
-            createPost(formName){
+            createPost(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         axios({
-                            method:'get',
-                            url:'http://localhost:8080/Technical-Forum/postServlet/addPost',
-                            params: {content : this.form3.content, image : this.form3.image, userId : this.user.id, plateId : this.activeTab}
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/postServlet/addPost',
+                            params: {
+                                content: this.form3.content,
+                                image: this.form3.image,
+                                userId: this.user.id,
+                                plateId: this.activeTab
+                            }
                         }).then(resp => {
                             if (resp.data === 'success') {
                                 //添加成功
@@ -917,51 +1072,47 @@
                 })
             },
             //修改板块公告
-            updatePlateNotice(){
+            updatePlateNotice() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/plateServlet/updatePlateNotice',
-                    params: {plateId : this.activeTab, notice : this.form2.notice}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/updatePlateNotice',
+                    params: {plateId: this.activeTab, notice: this.form2.notice}
                 }).then(resp => {
-                    if (resp.data === 'success'){}
+                    if (resp.data === 'success') {
+                    }
                     //修改成功
                     //消息提示
                     this.$message.success('板块公告保存成功！');
                 })
             },
             //根据plateId查询notice
-            selectPlateNoticeById(){
+            selectPlateNoticeById() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
-                    params: {plateId : this.activeTab}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
+                    params: {plateId: this.activeTab}
                 }).then(resp => {
-                    if (resp.data !== 'fail'){
+                    if (resp.data !== 'fail') {
                         //有数据
                         this.form2.notice = resp.data.notice;
                     }
                 })
             },
-            //根据帖子id删除帖子
-            deletePostById(postId){
+            //删除帖子
+            async deletePost(post) {
                 this.$confirm('确认删除该帖子吗?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning'
-                }).then(() => {
-                    axios({
-                        method:'post',
-                        url:'http://localhost:8080/Technical-Forum/postServlet/deletePostById',
-                        data:postId
-                    }).then(resp => {
-                        if (resp.data === 'success') {
-                            //删除成功
-                            //消息提示
-                            this.$message.success('删除帖子成功！');
-                            //重新加载帖子数据
-                            this.selectPostByPlateId();
-                        }
-                    })
+                }).then(async () => {
+                    //删除对应收藏信息
+                    await this.deleteFavoritePostByPostId(post.id);
+                    //删除对应评论信息
+                    await this.deleteReviewByPostId(post.id);
+                    //删除对应举报帖子信息
+                    await this.deleteReportedPostByPostId(post.id);
+                    //删除帖子
+                    await this.deletePostById(post.id);
                 }).catch(() => {
                     this.$message({
                         type: 'info',
@@ -969,15 +1120,37 @@
                     });
                 });
             },
+            //根据帖子id删除帖子
+            async deletePostById(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/deletePostById',
+                        data: postId
+                    })
+                    if (resp.data === 'success') {
+                        //删除成功
+                        //消息提示
+                        this.$message.success('删除帖子成功！');
+                        //重新加载帖子数据
+                        await this.selectPostByPlateId();
+                        //关闭帖子详情对话框
+                        this.postDetailsDialogVisible = false;
+                        return resp.data;
+                    }
+                } catch (error) {
+                    console.log('删除帖子时出错', error);
+                }
+            },
             // 切换点赞状态
-            toggleLike(post){
+            toggleLike(post) {
                 post.isLiked = !post.isLiked;
                 if (post.isLiked) {
                     //执行增加点赞量的方法
                     axios({
-                        method:'post',
-                        url:'http://localhost:8080/Technical-Forum/postServlet/addPostLikesById',
-                        data:post.id
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/addPostLikesById',
+                        data: post.id
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //修改成功
@@ -987,9 +1160,9 @@
                 } else {
                     //执行增加点赞量的方法
                     axios({
-                        method:'post',
-                        url:'http://localhost:8080/Technical-Forum/postServlet/reducePostLikesById',
-                        data:post.id
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/reducePostLikesById',
+                        data: post.id
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //修改成功
@@ -999,14 +1172,14 @@
                 }
             },
             //切换评论点赞状态
-            toggleReviewLike(review){
+            toggleReviewLike(review) {
                 review.isLiked = !review.isLiked;
                 if (review.isLiked) {
                     //执行增加评论点赞量的方法
                     axios({
-                        method:'post',
-                        url:'http://localhost:8080/Technical-Forum/reviewServlet/addReviewLikesById',
-                        data:review.id
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reviewServlet/addReviewLikesById',
+                        data: review.id
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //修改成功
@@ -1016,9 +1189,9 @@
                 } else {
                     //执行增加评论点赞量的方法
                     axios({
-                        method:'post',
-                        url:'http://localhost:8080/Technical-Forum/reviewServlet/reduceReviewLikesById',
-                        data:review.id
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reviewServlet/reduceReviewLikesById',
+                        data: review.id
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //修改成功
@@ -1030,25 +1203,25 @@
             //发布评论
             addReview() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/reviewServlet/addReview',
-                    params: {content : this.reviewForm.reviewContent, userId : this.user.id, postId : this._postId}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/addReview',
+                    params: {content: this.reviewForm.reviewContent, userId: this.user.id, postId: this._postId}
                 }).then(resp => {
-                    if (resp.data === 'success'){
+                    if (resp.data === 'success') {
                         //发布评论成功
                         //消息提示
                         this.$message.success('发表评论成功！');
                         this.reviewForm.reviewContent = null;
                         //重新加载评论数据
                         this.selectReviewByPostId(this._postId);
-                    } else if(resp.data === 'fail') {
+                    } else if (resp.data === 'fail') {
                         //输入内容为空
                         this.$message.warning('评论内容不能为空');
                     }
                 })
             },
             //根据postId查询对应review
-            async selectReviewByPostId(postId){
+            async selectReviewByPostId(postId) {
                 const resp = await axios({
                     method: 'post',
                     url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewByPostId',
@@ -1068,21 +1241,22 @@
                 }
             },
             //查询帖子收藏状态
-            async selectFavoritePost(postData){
+            async selectFavoritePost(postData) {
                 postData.forEach(post => {
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/selectFavoritePost',
-                        params: {userId : this.user.id, postId : post.id}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/favoritePostServlet/selectFavoritePost',
+                        params: {userId: this.user.id, postId: post.id}
                     }).then(resp => {
                         post.isFavorited = resp.data !== 'fail';
+                        //重新加载数据
                         this.$forceUpdate();
                     })
                 })
                 console.log(postData);
             },
             // 切换收藏状态
-            toggleFavorite(post){
+            toggleFavorite(post) {
                 //console.log('Before update:', post.isFavorited);
                 post.isFavorited = !post.isFavorited;
                 this.$forceUpdate();
@@ -1091,9 +1265,9 @@
                 if (post.isFavorited) {
                     //用户点击了收藏
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/addFavoritePost',
-                        params: {userId : this.user.id, postId : post.id}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/favoritePostServlet/addFavoritePost',
+                        params: {userId: this.user.id, postId: post.id}
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //增加收藏成功
@@ -1104,9 +1278,9 @@
                 } else {
                     //用户取消了收藏
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/favoritePostServlet/deleteFavoritePost',
-                        params: {userId : this.user.id, postId: post.id}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/favoritePostServlet/deleteFavoritePost',
+                        params: {userId: this.user.id, postId: post.id}
                     }).then(resp => {
                         if (resp.data === 'success') {
                             //取消收藏成功
@@ -1115,16 +1289,15 @@
                         }
                     })
                 }
-
             },
             //增加帖子浏览量
             addPostPageView(post) {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/postServlet/addPostPageView',
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/postServlet/addPostPageView',
                     data: post.id
                 }).then(resp => {
-                    if (resp.data === 'success'){
+                    if (resp.data === 'success') {
                         //增加浏览量成功
                         post.pageView++;
                     }
@@ -1133,15 +1306,264 @@
             //查询所有板块
             selectAllPlate() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/plateServlet/selectAllPlate'
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectAllPlate'
                 }).then(resp => {
                     if (resp.data !== 'fail') {
                         //有板块数据
                         this.plateData = resp.data;
                     }
                 })
-            }
+            },
+            //举报帖子事件
+            reportPostClick(post) {
+                this._postId = post.id;
+                this.reportPostDialogVisible = true;
+                this.selectPlateById();
+            },
+            //根据板块id查询板块
+            selectPlateById() {
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
+                    params: {plateId: this.activeTab}
+                }).then(resp => {
+                    if (resp.data !== 'fail') {
+                        //有板块数据
+                        this.plate = resp.data;
+                    }
+                })
+            },
+            //增加举报帖子
+            addReportPost(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.reportedPost.userId = this.plate.userId;
+                        this.reportedPost.plateId = this.activeTab;
+                        this.reportedPost.postId = this._postId;
+                        this.reportedPost.reportContent = this.reportPostForm.reportContent;
+                        //发送ajax请求增加举报帖子
+                        axios({
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/reportedPostServlet/addReportedPost',
+                            data: this.reportedPost
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //添加成功
+                                //关闭对话框
+                                this.reportPostDialogVisible = false;
+                                //消息提示
+                                this.$message.success('感谢您的举报，已反馈给版主！');
+                            }
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                })
+            },
+            //通过用户id查询帖子举报信息
+            selectReportedPostByUserId() {
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reportedPostServlet/selectByUserId',
+                    params: {userId: this.user.id}
+                }).then(resp => {
+                    if (resp.data !== 'fail') {
+                        //有帖子举报信息
+                        this.reportedPostData = resp.data;
+                    } else {
+                        //没有帖子举报信息
+                        //消息提示
+                        this.reportedPostData = null;
+                        this.$message.info('暂无帖子举报信息~');
+                    }
+                })
+            },
+            //通过帖子id查询帖子
+            async selectPostById() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/selectPostById',
+                        params: {postId: this._postId}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this.detailPostData[0] = resp.data;
+                        //渲染用户名
+                        this.userMap = await this.buildUserMap(this.detailPostData);
+                        // 替换userId为用户名
+                        this.replaceUserIdWithUsername(this.detailPostData);
+                    }
+                } catch (error) {
+                    console.error('获取帖子详情出错:', error);
+                }
+
+            },
+            //忽略举报信息
+            deleteReportedPostById(reportedPostId) {
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reportedPostServlet/deleteById',
+                    params: {reportedPostId: reportedPostId}
+                }).then(resp => {
+                    if (resp.data === 'success') {
+                        //忽略成功
+                        this.$message.success('已忽略该举报信息');
+                        //重新加载举报信息
+                        this.selectReportedPostByUserId();
+                    }
+                })
+            },
+            //根据用户id和板块id查询封禁表
+            async selectBanByUserIdAndPlateId(userId, plateId) {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/banServlet/selectByUserIdAndPlateId',
+                        params: {userId: userId, plateId: plateId}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this.ban = resp.data;
+                        //改变用户是否被封禁的标记
+                        this.user.isBaned = true;
+                        this.detailPostData[0].isUserBaned = true;
+                    } else {
+                        //无数据
+                        //改变用户是否被封禁的标记
+                        this.user.isBaned = false;
+                        this.detailPostData[0].isUserBaned = false;
+                    }
+                } catch (error) {
+                    console.log('查询封禁表时出错', error);
+                }
+            },
+            //增加封禁用户
+            addBan(post) {
+                console.log(post);
+                this.$confirm('封禁后用户将无法在对应板块继续发帖，是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/banServlet/selectByUserIdAndPlateId',
+                        params: {userId: post.userId, plateId: post.plateId}
+                    }).then(resp => {
+                        if (resp.data !== 'fail') {
+                            //用户已被封禁
+                            this.$message.info('该用户已被封禁过~');
+                        } else {
+                            //用户未被封禁
+                            //判断是不是用户自己
+                            if (this.user.id == post.userId) {
+                                //是用户自己
+                                console.log(this.ban);
+                                this.$message.warning('很抱歉，该用户是您自己~');
+                            } else {
+                                //不是用户自己
+                                //添加封禁用户
+                                this.ban.userId = post.userId;
+                                this.ban.plateId = post.plateId;
+                                axios({
+                                    method: 'post',
+                                    url: 'http://localhost:8080/Technical-Forum/banServlet/addBan',
+                                    data: this.ban
+                                }).then(resp => {
+                                    if (resp.data === 'success') {
+                                        //封禁成功
+                                        this.$message.success('封禁成功');
+                                        //重新加载帖子详情
+                                        post.isUserBaned = !post.isUserBaned;
+                                        this.selectPostById();
+                                        this.$forceUpdate();
+                                    }
+                                })
+                            }
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消封禁'
+                    });
+                });
+            },
+            //解封用户
+            unseal(post){
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/banServlet/deleteBan',
+                    data: this.ban
+                }).then(resp => {
+                    if (resp.data === 'success') {
+                        //删除成功
+                        //消息提示
+                        this.$message.success('解除封禁成功！');
+                        //重新加载帖子详情
+                        post.isUserBaned = !post.isUserBaned;
+                        this.selectPostById();
+                        this.$forceUpdate();
+                    }
+                })
+            },
+            //根据 帖子id 删除 收藏信息
+            async deleteFavoritePostByPostId(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/favoritePostServlet/deleteFavoritePostByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        this.$message.error('删除收藏信息时出错');
+                    }
+                    return resp.data;
+                } catch (e) {
+                    console.log('删除收藏信息时出异常', e);
+                    return false;
+                }
+            },
+            //根据 帖子id 删除评论信息
+            async deleteReviewByPostId(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reviewServlet/deleteReviewByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        this.$message.error('删除评论信息时出错');
+                    }
+                    return resp.data;
+                } catch (e) {
+                    console.log('删除评论信息时出异常', e);
+                    return false;
+                }
+            },
+            //根据 帖子id 删除 举报帖子信息
+            async deleteReportedPostByPostId(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reportedPostServlet/deleteReportedPostByPostId',
+                        data: postId
+                    })
+                    if (resp.data === 'success') {
+                        //重新加载举报信息
+                        this.selectReportedPostByUserId();
+                    } else {
+                        this.$message.error('删除举报帖子信息时出错');
+                    }
+                    return resp.data;
+                } catch (e) {
+                    console.log('删除举报帖子信息时出异常', e);
+                    return false;
+                }
+            },
         }
     })
 

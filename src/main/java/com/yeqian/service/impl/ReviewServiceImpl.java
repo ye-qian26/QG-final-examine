@@ -30,4 +30,9 @@ public class ReviewServiceImpl implements ReviewService {
     public void reduceReviewLikesById(Integer id) {
         reviewMapper.reduceReviewLikesById(id);
     }
+
+    @Override
+    public void deleteByPostId(Integer postId) {
+        reviewMapper.deleteByPostId(postId);
+    }
 }

@@ -29,4 +29,10 @@ public interface FavoritePostService {
      * @param postId
      */
     void addFavoritePost(Integer userId, Integer postId);
+
+    /**
+     * 根据 帖子id 删除 收藏
+     * @param postId
+     */
+    void deleteByPostId(Integer postId);
 }

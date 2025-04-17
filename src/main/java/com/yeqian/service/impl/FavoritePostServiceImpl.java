@@ -22,4 +22,9 @@ public class FavoritePostServiceImpl implements FavoritePostService {
     public void addFavoritePost(Integer userId, Integer postId) {
         favoritePostMapper.addFavoritePost(userId, postId);
     }
+
+    @Override
+    public void deleteByPostId(Integer postId) {
+        favoritePostMapper.deleteByPostId(postId);
+    }
 }

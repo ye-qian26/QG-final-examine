@@ -107,4 +107,22 @@ public class ReviewServlet extends BaseServlet {
         resp.getWriter().write("success");
     }
 
+    /**
+     * 根据 帖子id 删除 评论
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void deleteReviewByPostId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        reviewService.deleteByPostId(postId);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
 }

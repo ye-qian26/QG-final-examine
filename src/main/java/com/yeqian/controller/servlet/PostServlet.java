@@ -178,4 +178,30 @@ public class PostServlet extends BaseServlet {
         resp.getWriter().write("success");
     }
 
+
+    /**
+     * 通过id查询帖子
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectPostById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String _postId = req.getParameter("postId");
+        //3.转换数据
+        Integer postId = JSON.parseObject(_postId, Integer.class);
+        //4.执行service方法
+        Post post = postService.selectPostById(postId);
+        //5.响应数据
+        if (post != null) {
+            //有数据
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(post));
+        } else {
+            //无数据
+            resp.getWriter().write("fail");
+        }
+    }
 }

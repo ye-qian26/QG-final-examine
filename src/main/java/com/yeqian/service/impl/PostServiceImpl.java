@@ -39,4 +39,9 @@ public class PostServiceImpl implements PostService {
     public void addPostPageView(Integer id) {
         postMapper.addPostPageView(id);
     }
+
+    @Override
+    public Post selectPostById(Integer id) {
+        return postMapper.selectPostById(id);
+    }
 }

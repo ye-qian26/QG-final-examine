@@ -6,17 +6,27 @@ package com.yeqian.pojo;
 public class ReportedPost {
     private Integer id;
     private Integer userId;
+    private Integer plateId;
     private Integer postId;
     private String reportContent;
 
     public ReportedPost() {
     }
 
-    public ReportedPost(Integer id, Integer userId, Integer postId, String reportContent) {
+    public ReportedPost(Integer id, Integer userId, Integer plateId, Integer postId, String reportContent) {
         this.id = id;
         this.userId = userId;
+        this.plateId = plateId;
         this.postId = postId;
         this.reportContent = reportContent;
+    }
+
+    public Integer getPlateId() {
+        return plateId;
+    }
+
+    public void setPlateId(Integer plateId) {
+        this.plateId = plateId;
     }
 
     public Integer getUserId() {
@@ -56,6 +66,7 @@ public class ReportedPost {
         return "ReportedPost{" +
                 "id=" + id +
                 ", userId=" + userId +
+                ", plateId=" + plateId +
                 ", postId=" + postId +
                 ", reportContent='" + reportContent + '\'' +
                 '}';

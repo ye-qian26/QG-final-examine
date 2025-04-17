@@ -52,4 +52,12 @@ public interface PostMapper {
      */
     @Update("update post set page_view = page_view + 1 where id = #{id}")
     void addPostPageView(@Param("id") Integer id);
+
+    /**
+     * 通过id查询帖子
+     * @param id
+     * @return
+     */
+    @Select("select * from post where id = #{id}")
+    Post selectPostById(@Param("id") Integer id);
 }

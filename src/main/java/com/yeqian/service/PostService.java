@@ -44,4 +44,11 @@ public interface PostService {
      * @param id
      */
     void addPostPageView(Integer id);
+
+    /**
+     * 通过id查询帖子
+     * @param id
+     * @return
+     */
+    Post selectPostById(Integer id);
 }
