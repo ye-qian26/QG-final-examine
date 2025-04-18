@@ -49,4 +49,63 @@ public interface PlateMapper {
      */
     @Select("select * from plate")
     List<Plate> selectAllPlate();
+
+    /**
+     * 根据 板块名 模糊查询 板块
+     * @param name
+     * @return
+     */
+    @Select("select * from plate where name like #{name}")
+    List<Plate> selectPlateByName(@Param("name") String name);
+
+    /**
+     * 增加板块点赞量
+     * @param id
+     */
+    @Update("update plate set likes = likes + 1 where id = #{id}")
+    void addPlateLikes(@Param("id") Integer id);
+
+    /**
+     * 减少板块点赞量
+     * @param id
+     */
+    @Update("update plate set likes = likes - 1 where id = #{id}")
+    void reducePlateLikes(@Param("id") Integer id);
+
+    /**
+     * 增加板块浏览量
+     * @param id
+     */
+    @Update("update plate set page_view = page_view + 1 where id = #{id}")
+    void addPlatePageView(@Param("id") Integer id);
+
+    /**
+     * 根据 板块名 模糊查询 板块 并按 浏览量 降序排序
+     * @param name
+     * @return
+     */
+    @Select("select * from plate where name like #{name} order by page_view desc")
+    List<Plate> selectPlateByNameWithPageView(@Param("name") String name);
+
+    /**
+     * 查询 所有板块 并按 浏览量 降序排序
+     * @return
+     */
+    @Select("select * from plate order by page_view desc")
+    List<Plate> selectPlateWithPageView();
+
+    /**
+     * 根据 板块名 模糊查询 板块 并按 点赞量 降序排序
+     * @param name
+     * @return
+     */
+    @Select("select * from plate where name like #{name} order by likes desc")
+    List<Plate> selectPlateByNameWithLikes(@Param("name") String name);
+
+    /**
+     * 查询 所有板块 并按 点赞了 降序排序
+     * @return
+     */
+    @Select("select * from plate order by likes desc")
+    List<Plate> selectPlateWithLikes();
 }

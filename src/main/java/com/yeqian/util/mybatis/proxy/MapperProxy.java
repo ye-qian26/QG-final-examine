@@ -11,6 +11,8 @@ import com.yeqian.util.mybatis.type.TypeHandler;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.Map;
 public class MapperProxy implements InvocationHandler {
     //Map集合用来存放类与其对应的Handler处理器
     private static Map<Class, TypeHandler> typeHandlerMap = new HashMap<>();
+    //定义时间格式
+    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     //调用无参构造器时添加相关Handler处理器
     static {
@@ -105,8 +109,17 @@ public class MapperProxy implements InvocationHandler {
                     Method setMethod = methodMap.get(columnName);
                     //得到set方法的参数类型
                     Class<?> clazz = setMethod.getParameterTypes()[0];
-                    //执行set方法
-                    setMethod.invoke(object, this.typeHandlerMap.get(clazz).getResult(rs, columnName));
+                    if ("release_time".equals(columnName) && clazz == String.class) {
+                        java.sql.Timestamp timestamp = rs.getTimestamp(columnName);
+                        if (timestamp != null) {
+                            LocalDateTime ldt = timestamp.toLocalDateTime();
+                            String formattedDateTime = ldt.format(FORMATTER);
+                            setMethod.invoke(object, formattedDateTime);
+                        }
+                    } else {
+                        //执行set方法
+                        setMethod.invoke(object, this.typeHandlerMap.get(clazz).getResult(rs, columnName));
+                    }
                 }
                 lists.add(object);
             }

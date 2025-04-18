@@ -39,4 +39,6 @@ public interface FavoritePostMapper {
      */
     @Delete("delete from favorite_post where post_id = #{postId}")
     void deleteByPostId(@Param("postId") Integer postId);
+
+
 }

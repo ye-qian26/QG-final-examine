@@ -11,11 +11,12 @@ public class Post {
     private Integer likes;
     private Integer plateId;
     private Integer userId;
+    private String releaseTime;
 
     public Post() {
     }
 
-    public Post(Integer id, String content, String image, Integer pageView, Integer likes, Integer plateId, Integer userId) {
+    public Post(Integer id, String content, String image, Integer pageView, Integer likes, Integer plateId, Integer userId, String releaseTime) {
         this.id = id;
         this.content = content;
         this.image = image;
@@ -23,6 +24,15 @@ public class Post {
         this.likes = likes;
         this.plateId = plateId;
         this.userId = userId;
+        this.releaseTime = releaseTime;
+    }
+
+    public String getReleaseTime() {
+        return releaseTime;
+    }
+
+    public void setReleaseTime(String releaseTime) {
+        this.releaseTime = releaseTime;
     }
 
     public Integer getId() {
@@ -91,6 +101,7 @@ public class Post {
                 ", likes=" + likes +
                 ", plateId=" + plateId +
                 ", userId=" + userId +
+                ", releaseTime='" + releaseTime + '\'' +
                 '}';
     }
 }

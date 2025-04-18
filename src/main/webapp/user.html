@@ -80,17 +80,58 @@
     <!--主页-->
     <div v-if="activeIndex === '1'">
         <h1>主页内容</h1>
+        <el-form :inline="true" :model="plateForm" class="demo-form-inline">
+            <el-form-item label="板块名">
+                <el-input v-model="plateForm.vaguePlateName" placeholder="板块名称"></el-input>
+            </el-form-item>
+            <el-select v-model="plateValue" clearable placeholder="请选择">
+                <el-option
+                        v-for="item in plateOptions"
+                        :key="item.plateValue"
+                        :label="item.label"
+                        :value="item.plateValue">
+                </el-option>
+            </el-select>
+            <el-form-item>
+                <el-button type="primary" @click="selectPlateByName">搜索</el-button>
+            </el-form-item>
+        </el-form>
         <el-tabs v-model="activeTab" @tab-click="handleHomePageTab">
+
             <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
-                公告： <span>{{ plate.notice }}</span><br>
+                公告： {{ plate.notice }}<br>
+                <el-form :inline="true" :model="postForm" class="demo-form-inline">
+                    <el-form-item label="帖子内容">
+                        <el-input v-model="postForm.vaguePostContent" placeholder="帖子内容"></el-input>
+                    </el-form-item>
+                    <el-select v-model="postValue" clearable placeholder="请选择">
+                        <el-option
+                                v-for="item in postOptions"
+                                :key="item.postValue"
+                                :label="item.label"
+                                :value="item.postValue">
+                        </el-option>
+                    </el-select>
+                    <el-form-item>
+                        <el-button type="primary" @click="selectPostByContentAndPlateId">搜索</el-button>
+                    </el-form-item>
+                </el-form>
                 <el-button type="primary" @click="issuePost">发布帖子</el-button>
+                <!--点赞板块功能-->
+                <el-button icon="el-icon-thumbs" :class="{ 'is-active': plate.isLiked }"
+                           @click="togglePlateLike(plate)">
+                    {{ plate.likes }} 点赞板块
+                </el-button>
+                <!-- 板块浏览量显示 -->
+                {{ plate.pageView }} 浏览
                 <el-card class="post-card" v-for="post in postData" :key="post.id">
                     <template #header>
                         <div class="post-header">
-                            <span>{{ post.username }}</span>
+                            {{ post.username }}
+                            {{ post.releaseTime }}
                             <div class="action-buttons">
                                 <!-- 浏览量显示 -->
-                                <span>{{ post.pageView }} 浏览</span>
+                                {{ post.pageView }} 浏览
                                 <!--收藏功能-->
                                 <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
                                            @click="toggleFavorite(post)">
@@ -130,15 +171,22 @@
                     </el-form-item>
                 </el-form>
                 <el-button type="primary" @click="createPostDialogVisible=true">发布帖子</el-button>
+                <!--点赞板块功能-->
+                <el-button icon="el-icon-thumbs" :class="{ 'is-active': plate.isLiked }"
+                           @click="togglePlateLike(plate)">
+                    {{ plate.likes }} 点赞板块
+                </el-button>
+                <!-- 板块浏览量显示 -->
+                {{ plate.pageView }} 浏览
                 <el-card class="post-card" v-for="post in postData" :key="post.id">
                     <template #header>
                         <div class="post-header">
-                            <span>{{ post.username }}</span>
+                            {{ post.username }}
                             <div class="action-buttons">
                                 <!-- 浏览量显示 -->
-                                <span>{{ post.pageView }} 浏览</span>
+                                {{ post.pageView }} 浏览
                                 <!--收藏功能-->
-                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                <el-button icon="el-icon-star" :class="{ 'is-active':    post.isFavorited }"
                                            @click="toggleFavorite(post)">
                                     {{ post.isFavorited ? '已收藏' : '收藏' }}
                                 </el-button>
@@ -191,6 +239,7 @@
         <el-button type='primary' @click="updateDialogVisible=true">设置密码</el-button>
 
         <!--帖子举报信息通知-->
+        <el-button type='primary' @click="myFavoritePost">我的收藏</el-button>
         <el-button type="info" @click="infoClick1">帖子举报信息通知</el-button>
         <div v-if="user.role==='2'">
             <!--管理员-->
@@ -420,6 +469,41 @@
 
         </el-card>
     </el-dialog>
+
+    <!-- 我的收藏对话框 -->
+    <el-dialog
+            title="我的收藏"
+            :visible.sync="myFavoritePostDialogVisible"
+            :before-close="handleCloseMyFavoritePost"
+            width="50%"
+    >
+        <el-card class="post-card" v-for="post in myFavoritePostData" :key="post.id">
+            <template #header>
+                <div class="post-header">
+                    <span>{{ post.username }}</span>
+                    <div class="action-buttons">
+                        <!-- 浏览量显示 -->
+                        <span>{{ post.pageView }} 浏览</span>
+                        <!--收藏功能-->
+                        <el-button icon="el-icon-star" :class="{ 'is-active':    post.isFavorited }"
+                                   @click="toggleFavorite(post)">
+                            {{ post.isFavorited ? '已收藏' : '收藏' }}
+                        </el-button>
+                        <!--点赞功能-->
+                        <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                   @click="toggleLike(post)">
+                            {{ post.likes }} 赞
+                        </el-button>
+                    </div>
+                </div>
+            </template>
+            <img :src="post.image" alt="Post Image" class="post-image"/>
+            <div class="post-content">{{ post.content }}</div>
+
+            <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+
+        </el-card>
+    </el-dialog>
 </div>
 
 <script src="js/vue.js"></script>
@@ -474,7 +558,8 @@
                     userId: '',
                     notice: '',
                     pageView: '',
-                    likes: ''
+                    likes: '',
+                    isLiked: false
                 },
                 //帖子数据
                 post: {
@@ -485,6 +570,7 @@
                     likes: '',
                     plateId: '',
                     userId: '',
+                    releaseTime:'',
                     isLiked: false,
                     isFavorited: false,
                     isUserBaned: false
@@ -544,6 +630,14 @@
                 reportPostForm: {
                     reportContent: ''
                 },
+                //搜索板块表单
+                plateForm: {
+                    vaguePlateName: ''
+                },
+                //搜索帖子表单
+                postForm: {
+                    vaguePostContent: ''
+                },
                 //信息表格
                 infoData: [],
                 //帖子集合
@@ -562,6 +656,8 @@
                 detailPostData: [],
                 //举报帖子信息集合
                 reportedPostData: [],
+                //我的收藏帖子集合
+                myFavoritePostData: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
@@ -582,6 +678,8 @@
                 reportPostInfoDialogVisible: false,
                 //帖子详情对话框
                 postDetailsDialogVisible: false,
+                //我的收藏对话框
+                myFavoritePostDialogVisible: false,
                 //确认密码
                 checkPassword: '',
                 //用户ID到用户名的映射对象
@@ -592,6 +690,29 @@
                 homePageActiveTab: '',
                 //临时帖子id
                 _postId: '',
+                //搜索帖子选择框
+                postOptions: [{
+                    postValue: '最新发布',
+                    label: '最新发布'
+                }, {
+                    postValue: '最多浏览',
+                    label: '最多浏览'
+                },  {
+                    postValue: '最多点赞',
+                    label: '最多点赞'
+                }],
+                //搜索帖子选择内容
+                postValue: '',
+                //搜索板块选择框
+                plateOptions: [{
+                    plateValue: '最多浏览',
+                    label: '最多浏览'
+                },  {
+                    plateValue: '最多点赞',
+                    label: '最多点赞'
+                }],
+                //搜索板块选择内容
+                plateValue: '',
                 //输入规则
                 rules: {
                     //昵称
@@ -716,6 +837,9 @@
             handleClosePostDetails() {
                 this.postDetailsDialogVisible = false;
             },
+            handleCloseMyFavoritePost(){
+                this.myFavoritePostDialogVisible = false;
+            },
             //点击举报帖子信息事件
             infoClick1() {
                 this.selectReportedPostByUserId();
@@ -743,6 +867,7 @@
                 //查询板块公告
                 this.selectPlateNoticeById();
                 try {
+                    await this.addPlatePageView();
                     //先查询帖子
                     await this.selectPostByPlateId();
                     //后查询收藏状态
@@ -753,15 +878,20 @@
             },
             //主页切换标签页事件
             async handleHomePageTab() {
-                this.selectAllPlate();
                 try {
+                    //增加板块浏览量
+                    await this.addPlatePageView();
                     //先查询帖子
                     await this.selectPostByPlateId();
                     //后查询收藏状态
-                    await this.selectFavoritePost(this.postData)
+                    await this.selectFavoritePost(this.postData);
                 } catch (error) {
                     console.error('切换标签页执行过程中出错:', error);
                 }
+            },
+            // “我的收藏“ 点击事件
+            myFavoritePost(){
+                this.myFavoritePostDialogVisible = true;
             },
             //打开评论
             checkReview(post) {
@@ -862,6 +992,7 @@
                                 this.$message.success('已发送申请，请等待系统管理员审核...');
                                 //关闭对话框
                                 this.handleClosePlate();
+                                this.form2.plateName = null;
                             }
                         })
                     } else {
@@ -1033,13 +1164,13 @@
                 }
             },
             //发布帖子
-            async issuePost(){
+            async issuePost() {
                 //判断用户是否被封禁
                 await this.selectBanByUserIdAndPlateId(this.user.id, this.activeTab);
                 if (this.user.isBaned) {
                     //用户在此板块已被封禁
                     this.$message.warning('您在此板块已被版主封禁，无法发帖');
-                } else this.createPostDialogVisible=true;
+                } else this.createPostDialogVisible = true;
             },
             //添加帖子
             createPost(formName) {
@@ -1493,10 +1624,10 @@
                 });
             },
             //解封用户
-            unseal(post){
+            unseal(post) {
                 axios({
-                    method:'post',
-                    url:'http://localhost:8080/Technical-Forum/banServlet/deleteBan',
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/banServlet/deleteBan',
                     data: this.ban
                 }).then(resp => {
                     if (resp.data === 'success') {
@@ -1564,6 +1695,92 @@
                     return false;
                 }
             },
+            //根据 板块名 模糊查询 板块
+            selectPlateByName() {
+                axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByName',
+                    params: {plateName : this.plateForm.vaguePlateName, select : this.plateValue}
+                }).then(resp => {
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this.plateData = resp.data;
+                    } else {
+                        //无数据
+                        this.$message.error('未找到相关内容的板块');
+                    }
+                })
+            },
+            //根据 帖子内容 模糊查询 帖子
+            async selectPostByContentAndPlateId() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/postServlet/selectPostByContentAndPlateId',
+                        params: {content: this.postForm.vaguePostContent, plateId: this.activeTab, select: this.postValue}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this._postData = resp.data;
+                        //显示作者
+                        this.userMap = await this.buildUserMap(this._postData);
+                        this.replaceUserIdWithUsername(this._postData);
+                        //加载帖子收藏状态
+                        await this.selectFavoritePost(this._postData);
+                        this.postData = this._postData;
+                        return resp.data;
+                    } else {
+                        this.$message.error('没有搜索到相关内容');
+                    }
+                } catch (e) {
+                    console.log('搜索帖子时报异常',e);
+                }
+
+            },
+            //切换板块点赞状态
+            togglePlateLike(plate) {
+                plate.isLiked = !plate.isLiked;
+                if (plate.isLiked) {
+                    //增加板块点赞量
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/addPlateLikesById',
+                        data: plate.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            plate.likes++;
+                        }
+                    })
+                } else {
+                    //减少板块点赞量
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/reducePlateLikesById',
+                        data: plate.id
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            plate.likes--;
+                        }
+                    })
+                }
+            },
+            //增加 板块 浏览量
+            async addPlatePageView() {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/addPlatePageView',
+                        data: this.activeTab
+                    })
+                    if (resp.data !== 'success') {
+                        this.$message.warning('增加板块浏览量时出错');
+                    }
+                    return resp.data;
+                } catch (e) {
+                    console.log('增加板块浏览量时报异常'.e);
+                    return false;
+                }
+            }
         }
     })
 

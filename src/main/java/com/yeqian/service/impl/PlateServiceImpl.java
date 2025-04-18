@@ -36,4 +36,44 @@ public class PlateServiceImpl implements PlateService {
     public List<Plate> selectAllPlate() {
         return plateMapper.selectAllPlate();
     }
+
+    @Override
+    public List<Plate> selectPlateByName(String name) {
+        return plateMapper.selectPlateByName(name);
+    }
+
+    @Override
+    public void addPlateLikes(Integer id) {
+        plateMapper.addPlateLikes(id);
+    }
+
+    @Override
+    public void reducePlateLikes(Integer id) {
+        plateMapper.reducePlateLikes(id);
+    }
+
+    @Override
+    public void addPlatePageView(Integer id) {
+        plateMapper.addPlatePageView(id);
+    }
+
+    @Override
+    public List<Plate> selectPlateByNameWithPageView(String name) {
+        return plateMapper.selectPlateByNameWithPageView(name);
+    }
+
+    @Override
+    public List<Plate> selectPlateWithPageView() {
+        return plateMapper.selectPlateWithPageView();
+    }
+
+    @Override
+    public List<Plate> selectPlateByNameWithLikes(String name) {
+        return plateMapper.selectPlateByNameWithLikes(name);
+    }
+
+    @Override
+    public List<Plate> selectPlateWithLikes() {
+        return plateMapper.selectPlateWithLikes();
+    }
 }

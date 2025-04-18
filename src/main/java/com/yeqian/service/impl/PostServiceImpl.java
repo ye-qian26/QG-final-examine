@@ -5,6 +5,7 @@ import com.yeqian.pojo.Post;
 import com.yeqian.service.PostService;
 import com.yeqian.util.mybatis.proxy.MapperProxyFactory;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PostServiceImpl implements PostService {
@@ -16,8 +17,8 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void addPost(String content, String image, Integer plateId, Integer userId) {
-        postMapper.addPost(content, image, plateId, userId);
+    public void addPost(String content, String image, Integer plateId, Integer userId, String releaseTime) {
+        postMapper.addPost(content, image, plateId, userId, releaseTime);
     }
 
     @Override
@@ -43,5 +44,40 @@ public class PostServiceImpl implements PostService {
     @Override
     public Post selectPostById(Integer id) {
         return postMapper.selectPostById(id);
+    }
+
+    @Override
+    public List<Post> selectPostByContentAndPlateId(String content, Integer plateId) {
+        return postMapper.selectPostByContentAndPlateId(content, plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByContentAndPlateIdWithNew(String content, Integer plateId) {
+        return postMapper.selectPostByContentAndPlateIdWithNew(content, plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByPlateIdWithNew(Integer plateId) {
+        return postMapper.selectPostByPlateIdWithNew(plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByContentAndPlateIdWithPageView(String content, Integer plateId) {
+        return postMapper.selectPostByContentAndPlateIdWithPageView(content, plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByPlateIdWithPageView(Integer plateId) {
+        return postMapper.selectPostByPlateIdWithPageView(plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByContentAndPlateIdWithLikes(String content, Integer plateId) {
+        return postMapper.selectPostByContentAndPlateIdWithLikes(content, plateId);
+    }
+
+    @Override
+    public List<Post> selectPostByPlateIdWithLikes(Integer plateId) {
+        return postMapper.selectPostByPlateIdWithLikes(plateId);
     }
 }

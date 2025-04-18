@@ -22,8 +22,9 @@ public interface PostMapper {
      * @param content
      * @param image
      */
-    @Insert("insert into post(content, image, plate_id, user_id) values (#{content}, #{image}, #{plateId}, #{userId})")
-    void addPost(@Param("content") String content, @Param("image")String image, @Param("plateId") Integer plateId, @Param("userId") Integer userId);
+    @Insert("insert into post(content, image, plate_id, user_id, release_time) values (#{content}, #{image}, #{plateId}, #{userId}, #{releaseTime})")
+    void addPost(@Param("content") String content, @Param("image")String image,
+                 @Param("plateId") Integer plateId, @Param("userId") Integer userId, @Param("releaseTime") String releaseTime);
 
     /**
      *
@@ -60,4 +61,64 @@ public interface PostMapper {
      */
     @Select("select * from post where id = #{id}")
     Post selectPostById(@Param("id") Integer id);
+
+    /**
+     * 通过 板块id 和 帖子内容 模糊查询 帖子
+     * @param content
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} and content like #{content}")
+    List<Post> selectPostByContentAndPlateId(@Param("content") String content, @Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 和 帖子内容 模糊查询 帖子 并按 时间 降序排序
+     * @param content
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} and content like #{content} order by release_time desc")
+    List<Post> selectPostByContentAndPlateIdWithNew(@Param("content") String content, @Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 模糊查询 帖子 并按 时间 降序排序
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} order by release_time desc")
+    List<Post> selectPostByPlateIdWithNew(@Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 和 帖子内容 模糊查询 帖子 并按 浏览量 降序排序
+     * @param content
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} and content like #{content} order by page_view desc")
+    List<Post> selectPostByContentAndPlateIdWithPageView(@Param("content") String content, @Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 模糊查询 帖子 并按 浏览量 降序排序
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} order by page_view desc")
+    List<Post> selectPostByPlateIdWithPageView(@Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 和 帖子内容 模糊查询 帖子 并按 点赞量 降序排序
+     * @param content
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} and content like #{content} order by likes desc")
+    List<Post> selectPostByContentAndPlateIdWithLikes(@Param("content") String content, @Param("plateId") Integer plateId);
+
+    /**
+     * 通过 板块id 模糊查询 帖子 并按 点赞量 降序排序
+     * @param plateId
+     * @return
+     */
+    @Select("select * from post where plate_id = #{plateId} order by likes desc")
+    List<Post> selectPostByPlateIdWithLikes(@Param("plateId") Integer plateId);
 }

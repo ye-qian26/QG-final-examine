@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebServlet("/postServlet/*")
@@ -100,9 +102,15 @@ public class PostServlet extends BaseServlet {
         String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         Integer userId = JSON.parseObject(_userId, Integer.class);
         Integer plateId = JSON.parseObject(_plateId, Integer.class);
-        //3.执行service方法
-        postService.addPost(content, image, plateId, userId);
-        //4.响应数据
+        //3.获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+        //定义时间格式
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        //格式化时间
+        String formattedDateTime = now.format(formatter);
+        //4.执行service方法
+        postService.addPost(content, image, plateId, userId, formattedDateTime);
+        //5.响应数据
         resp.getWriter().write("success");
     }
 
@@ -202,6 +210,74 @@ public class PostServlet extends BaseServlet {
         } else {
             //无数据
             resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 通过 板块id 和 帖子内容 模糊查询 帖子
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectPostByContentAndPlateId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        resp.setContentType("text/json;charset=utf-8");
+        //2.接收数据
+        String _content = req.getParameter("content");
+        String _plateId = req.getParameter("plateId");
+        String _select = req.getParameter("select");
+        String select = new String(_select.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        //3.转换数据
+        List<Post> posts = null;
+
+        Integer plateId = JSON.parseObject(_plateId, Integer.class);
+        if (_content != null && !_content.isEmpty()) {
+            // content 不为空
+            String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+            content = "%" + content.trim() + "%";
+            //判断用户是否有选择条件
+            //4.执行service方法
+            if (select.isEmpty()) {
+                //用户未选择条件
+                posts = postService.selectPostByContentAndPlateId(content, plateId);
+            } else if ("最新发布".equals(select)) {
+                //用户选择查询最新发布的帖子
+                posts = postService.selectPostByContentAndPlateIdWithNew(content, plateId);
+            } else if ("最多浏览".equals(select)) {
+                //用户选择查询最多浏览的帖子
+                posts = postService.selectPostByContentAndPlateIdWithPageView(content, plateId);
+            } else if ("最多点赞".equals(select)) {
+                //用户选择查询最多点赞的帖子
+                posts = postService.selectPostByContentAndPlateIdWithLikes(content, plateId);
+            }
+            if (posts != null && !posts.isEmpty()) {
+                resp.getWriter().write(JSON.toJSONString(posts));
+            } else {
+                resp.getWriter().write("fail");
+            }
+        } else {
+            // content 为空
+            //判断用户是否有选择条件
+            //4.执行service方法
+            if (select.isEmpty()) {
+                //用户未选择条件
+                posts = postService.selectPostByPlateId(plateId);
+            } else if ("最新发布".equals(select)) {
+                //用户选择查询最新发布的帖子
+                posts = postService.selectPostByPlateIdWithNew(plateId);
+            } else if ("最多浏览".equals(select)) {
+                //用户选择查询最多浏览的帖子
+                posts = postService.selectPostByPlateIdWithPageView(plateId);
+            } else if ("最多点赞".equals(select)) {
+                //用户选择查询最多点赞的帖子
+                posts = postService.selectPostByPlateIdWithLikes(plateId);
+            }
+            if (posts != null && !posts.isEmpty()) {
+                resp.getWriter().write(JSON.toJSONString(posts));
+            } else {
+                resp.getWriter().write("fail");
+            }
         }
     }
 }
