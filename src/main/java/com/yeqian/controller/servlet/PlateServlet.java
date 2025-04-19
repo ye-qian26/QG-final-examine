@@ -77,7 +77,7 @@ public class PlateServlet extends BaseServlet {
     }
 
     /**
-     * 添加板块
+     * 根据 板块id 查询 板块
      * @param req
      * @param resp
      * @throws Exception

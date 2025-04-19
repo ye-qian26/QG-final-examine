@@ -2,6 +2,7 @@ package com.yeqian.controller.servlet;
 
 import com.alibaba.fastjson.JSON;
 import com.yeqian.pojo.FavoritePost;
+import com.yeqian.pojo.Post;
 import com.yeqian.pojo.Review;
 import com.yeqian.service.FavoritePostService;
 import com.yeqian.service.ReviewService;
@@ -103,6 +104,32 @@ public class FavoritePostServlet extends BaseServlet {
         favoritePostService.deleteByPostId(postId);
         //5.响应数据
         resp.getWriter().write("success");
+    }
+
+
+    /**
+     * 根据 用户id 查询 收藏帖子信息
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectPostsByUserId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer useId = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        List<Post> posts = favoritePostService.selectPostsByUserId(useId);
+        //5.响应数据
+        if (posts != null && !posts.isEmpty()) {
+            //有数据
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(posts));
+        } else {
+            resp.getWriter().write("fail");
+        }
     }
 
 }

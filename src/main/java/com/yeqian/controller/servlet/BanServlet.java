@@ -46,13 +46,13 @@ public class BanServlet extends BaseServlet {
         //1.处理乱码问题
         req.setCharacterEncoding("utf-8");
         //2.接收数据
-        String _userId = req.getParameter("userId");
+        String _userId = req.getParameter("banUserId");
         String _plateId = req.getParameter("plateId");
         //3.转换数据
-        Integer userId = JSON.parseObject(_userId, Integer.class);
+        Integer banUserId = JSON.parseObject(_userId, Integer.class);
         Integer plateId = JSON.parseObject(_plateId, Integer.class);
         //4.执行service方法
-        Ban ban = banService.selectByUserIdAndPlateId(userId, plateId);
+        Ban ban = banService.selectByUserIdAndPlateId(banUserId, plateId);
         //5.响应数据
         if (ban != null) {
             //有数据
@@ -81,6 +81,30 @@ public class BanServlet extends BaseServlet {
         banService.deleteBan(ban);
         //5.响应数据
         resp.getWriter().write("success");
+    }
+
+    /**
+     * 根据 用户id 查询 封禁表
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectBanByUserId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _userId = req.getParameter("userId");
+        //3.转换数据
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        //4.执行service方法
+        List<Ban> bans = banService.selectByUserId(userId);
+        //5.响应数据
+        if (bans != null && !bans.isEmpty()) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(bans));
+        } else {
+            resp.getWriter().write("fail");
+        }
     }
 
 }

@@ -5,6 +5,9 @@ import com.yeqian.pojo.Ban;
 import com.yeqian.service.BanService;
 import com.yeqian.util.mybatis.proxy.MapperProxyFactory;
 
+import java.util.Collections;
+import java.util.List;
+
 public class BanServiceImpl implements BanService {
     BanMapper banMapper = MapperProxyFactory.getProxy(BanMapper.class);
 
@@ -14,12 +17,17 @@ public class BanServiceImpl implements BanService {
     }
 
     @Override
-    public Ban selectByUserIdAndPlateId(Integer userId, Integer plateId) {
-        return banMapper.selectByUserIdAndPlateId(userId, plateId);
+    public Ban selectByUserIdAndPlateId(Integer banUserId, Integer plateId) {
+        return banMapper.selectByUserIdAndPlateId(banUserId, plateId);
     }
 
     @Override
     public void deleteBan(Ban ban) {
         banMapper.deleteBan(ban);
+    }
+
+    @Override
+    public List<Ban> selectByUserId(Integer userId) {
+        return banMapper.selectByUserId(userId);
     }
 }

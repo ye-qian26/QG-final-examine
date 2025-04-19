@@ -1,10 +1,13 @@
 package com.yeqian.dao.mapper;
 
 import com.yeqian.pojo.FavoritePost;
+import com.yeqian.pojo.Post;
 import com.yeqian.util.mybatis.annotations.Delete;
 import com.yeqian.util.mybatis.annotations.Insert;
 import com.yeqian.util.mybatis.annotations.Param;
 import com.yeqian.util.mybatis.annotations.Select;
+
+import java.util.List;
 
 public interface FavoritePostMapper {
 
@@ -41,4 +44,14 @@ public interface FavoritePostMapper {
     void deleteByPostId(@Param("postId") Integer postId);
 
 
+    /**
+     * 根据 用户id 查询 所收藏的帖子
+     * @param userId
+     * @return
+     */
+    @Select("select p.* from post p " +
+            "JOIN favorite_post fp on p.id = fp.post_id " +
+            "JOIN user u on u.id = fp.user_id " +
+            "where u.id = #{userId}")
+    List<Post> selectPostsByUserId(@Param("userId") Integer userId);
 }

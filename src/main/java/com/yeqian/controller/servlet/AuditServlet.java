@@ -74,7 +74,7 @@ public class AuditServlet extends BaseServlet {
     }
 
     /**
-     * 根据id删除申请表
+     * 修改 申请 处理状态
      * @param req
      * @param resp
      * @throws Exception

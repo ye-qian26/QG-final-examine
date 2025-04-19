@@ -80,6 +80,7 @@
     <!--主页-->
     <div v-if="activeIndex === '1'">
         <h1>主页内容</h1>
+        <!--搜索板块表单-->
         <el-form :inline="true" :model="plateForm" class="demo-form-inline">
             <el-form-item label="板块名">
                 <el-input v-model="plateForm.vaguePlateName" placeholder="板块名称"></el-input>
@@ -97,9 +98,17 @@
             </el-form-item>
         </el-form>
         <el-tabs v-model="activeTab" @tab-click="handleHomePageTab">
-
-            <el-tab-pane v-for="(plate, index) in plateData" :key="index" :label="plate.name" :name="plate.id">
+            <el-tab-pane v-for="(plate, index) in interestedPlate" :key="index" :label="plate.name" :name="plate.id">
+                <!--关注板块功能-->
+                <div v-if="plate.isInterested">
+                    <el-button round @click="toggleInterestPlate(plate)">已关注板块</el-button>
+                </div>
+                <div v-else>
+                    <el-button type="success" round @click="toggleInterestPlate(plate)">关注板块</el-button>
+                </div>
+                <br>
                 公告： {{ plate.notice }}<br>
+                <!--搜索帖子表单-->
                 <el-form :inline="true" :model="postForm" class="demo-form-inline">
                     <el-form-item label="帖子内容">
                         <el-input v-model="postForm.vaguePostContent" placeholder="帖子内容"></el-input>
@@ -113,9 +122,10 @@
                         </el-option>
                     </el-select>
                     <el-form-item>
-                        <el-button type="primary" @click="selectPostByContentAndPlateId">搜索</el-button>
+                        <el-button type="primary" @click="searchPost">搜索</el-button>
                     </el-form-item>
                 </el-form>
+                <!--发布帖子功能-->
                 <el-button type="primary" @click="issuePost">发布帖子</el-button>
                 <!--点赞板块功能-->
                 <el-button icon="el-icon-thumbs" :class="{ 'is-active': plate.isLiked }"
@@ -124,10 +134,195 @@
                 </el-button>
                 <!-- 板块浏览量显示 -->
                 {{ plate.pageView }} 浏览
-                <el-card class="post-card" v-for="post in postData" :key="post.id">
+                <el-card class="post-card" v-for="post in interestedUserPosts" :key="post.id">
                     <template #header>
                         <div class="post-header">
                             {{ post.username }}
+                            <!--关注用户功能-->
+                            <div v-if="post.isMyself">
+                                <!--帖子作者是用户自己-->
+                                （我）
+                            </div>
+                            <div v-else>
+                                <!--帖子作者不是用户自己-->
+                                <div v-if="post.isUserInterested">
+                                    <el-button round @click="toggleInterestUser(post)">已关注</el-button>
+                                </div>
+                                <div v-else>
+                                    <el-button type="success" round @click="toggleInterestUser(post)">关注</el-button>
+                                </div>
+                            </div>
+
+                            <!--帖子发布时间-->
+                            {{ post.releaseTime }}
+                            <div class="action-buttons">
+                                <!-- 浏览量显示 -->
+                                {{ post.pageView }} 浏览
+                                <!--收藏功能-->
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                           @click="toggleFavorite(post)">
+                                    {{ post.isFavorited ? '已收藏' : '收藏' }}
+                                </el-button>
+                                <!--点赞功能-->
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                           @click="toggleLike(post)">
+                                    {{ post.likes }} 赞
+                                </el-button>
+                                <!--举报帖子功能-->
+                                <el-button type="danger" plain @click="reportPostClick(post)">举报帖子</el-button>
+                            </div>
+                        </div>
+                    </template>
+                    <img :src="post.image" alt="Post Image" class="post-image"/>
+                    <div class="post-content">{{ post.content }}</div>
+                    <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                </el-card>
+
+                <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
+                    <template #header>
+                        <div class="post-header">
+                            {{ post.username }}
+                            <!--关注用户功能-->
+                            <div v-if="post.isMyself">
+                                <!--帖子作者是用户自己-->
+                                （我）
+                            </div>
+                            <div v-else>
+                                <!--帖子作者不是用户自己-->
+                                <div v-if="post.isUserInterested">
+                                    <el-button round @click="toggleInterestUser(post)">已关注</el-button>
+                                </div>
+                                <div v-else>
+                                    <el-button type="success" round @click="toggleInterestUser(post)">关注</el-button>
+                                </div>
+                            </div>
+
+                            <!--帖子发布时间-->
+                            {{ post.releaseTime }}
+                            <div class="action-buttons">
+                                <!-- 浏览量显示 -->
+                                {{ post.pageView }} 浏览
+                                <!--收藏功能-->
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                           @click="toggleFavorite(post)">
+                                    {{ post.isFavorited ? '已收藏' : '收藏' }}
+                                </el-button>
+                                <!--点赞功能-->
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                           @click="toggleLike(post)">
+                                    {{ post.likes }} 赞
+                                </el-button>
+                                <!--举报帖子功能-->
+                                <el-button type="danger" plain @click="reportPostClick(post)">举报帖子</el-button>
+                            </div>
+                        </div>
+                    </template>
+                    <img :src="post.image" alt="Post Image" class="post-image"/>
+                    <div class="post-content">{{ post.content }}</div>
+                    <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                </el-card>
+            </el-tab-pane>
+
+            <el-tab-pane v-for="(plate, index) in unInterestedPlate" :key="index" :label="plate.name" :name="plate.id">
+                <!--关注板块功能-->
+                <div v-if="plate.isInterested">
+                    <el-button round @click="toggleInterestPlate(plate)">已关注板块</el-button>
+                </div>
+                <div v-else>
+                    <el-button type="success" round @click="toggleInterestPlate(plate)">关注板块</el-button>
+                </div>
+                <br>
+                公告： {{ plate.notice }}<br>
+                <!--搜索帖子表单-->
+                <el-form :inline="true" :model="postForm" class="demo-form-inline">
+                    <el-form-item label="帖子内容">
+                        <el-input v-model="postForm.vaguePostContent" placeholder="帖子内容"></el-input>
+                    </el-form-item>
+                    <el-select v-model="postValue" clearable placeholder="请选择">
+                        <el-option
+                                v-for="item in postOptions"
+                                :key="item.postValue"
+                                :label="item.label"
+                                :value="item.postValue">
+                        </el-option>
+                    </el-select>
+                    <el-form-item>
+                        <el-button type="primary" @click="searchPost">搜索</el-button>
+                    </el-form-item>
+                </el-form>
+                <!--发布帖子功能-->
+                <el-button type="primary" @click="issuePost">发布帖子</el-button>
+                <!--点赞板块功能-->
+                <el-button icon="el-icon-thumbs" :class="{ 'is-active': plate.isLiked }"
+                           @click="togglePlateLike(plate)">
+                    {{ plate.likes }} 点赞板块
+                </el-button>
+                <!-- 板块浏览量显示 -->
+                {{ plate.pageView }} 浏览
+                <el-card class="post-card" v-for="post in interestedUserPosts" :key="post.id">
+                    <template #header>
+                        <div class="post-header">
+                            {{ post.username }}
+                            <!--关注用户功能-->
+                            <div v-if="post.isMyself">
+                                <!--帖子作者是用户自己-->
+                                （我）
+                            </div>
+                            <div v-else>
+                                <!--帖子作者不是用户自己-->
+                                <div v-if="post.isUserInterested">
+                                    <el-button round @click="toggleInterestUser(post)">已关注</el-button>
+                                </div>
+                                <div v-else>
+                                    <el-button type="success" round @click="toggleInterestUser(post)">关注</el-button>
+                                </div>
+                            </div>
+
+                            <!--帖子发布时间-->
+                            {{ post.releaseTime }}
+                            <div class="action-buttons">
+                                <!-- 浏览量显示 -->
+                                {{ post.pageView }} 浏览
+                                <!--收藏功能-->
+                                <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                           @click="toggleFavorite(post)">
+                                    {{ post.isFavorited ? '已收藏' : '收藏' }}
+                                </el-button>
+                                <!--点赞功能-->
+                                <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                           @click="toggleLike(post)">
+                                    {{ post.likes }} 赞
+                                </el-button>
+                                <!--举报帖子功能-->
+                                <el-button type="danger" plain @click="reportPostClick(post)">举报帖子</el-button>
+                            </div>
+                        </div>
+                    </template>
+                    <img :src="post.image" alt="Post Image" class="post-image"/>
+                    <div class="post-content">{{ post.content }}</div>
+                    <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                </el-card>
+
+                <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
+                    <template #header>
+                        <div class="post-header">
+                            {{ post.username }}
+                            <!--关注用户功能-->
+                            <div v-if="post.isMyself">
+                                <!--帖子作者是用户自己-->
+                                （我）
+                            </div>
+                            <div v-else>
+                                <!--帖子作者不是用户自己-->
+                                <div v-if="post.isUserInterested">
+                                    <el-button round @click="toggleInterestUser(post)">已关注</el-button>
+                                </div>
+                                <div v-else>
+                                    <el-button type="success" round @click="toggleInterestUser(post)">关注</el-button>
+                                </div>
+                            </div>
+
+                            <!--帖子发布时间-->
                             {{ post.releaseTime }}
                             <div class="action-buttons">
                                 <!-- 浏览量显示 -->
@@ -240,7 +435,9 @@
 
         <!--帖子举报信息通知-->
         <el-button type='primary' @click="myFavoritePost">我的收藏</el-button>
+        <el-button type='primary' @click="myBanUser">我封禁的用户</el-button>
         <el-button type="info" @click="infoClick1">帖子举报信息通知</el-button>
+        <el-button type="success" @click="myHistoricalRecord">帖子足迹</el-button>
         <div v-if="user.role==='2'">
             <!--管理员-->
             <el-button type="info" @click="infoClick2">用户申请信息</el-button>
@@ -316,7 +513,7 @@
                 <el-row slot-scope="scope">
                     <div v-if="scope.row.statusStr==='未处理'">
                         <el-button type="primary" @click="allowAudit(scope.row)">允许</el-button>
-                        <el-button type="danger" plain @click="unallowAudit(scope.row)">不允许</el-button>
+                        <el-button type="danger" plain @click="unAllowAudit(scope.row)">不允许</el-button>
                     </div>
                     <div v-else-if="scope.row.statusStr==='已处理'">
                         <el-button type="success" @click="deleteAuditById(scope.row)">清理</el-button>
@@ -485,7 +682,7 @@
                         <!-- 浏览量显示 -->
                         <span>{{ post.pageView }} 浏览</span>
                         <!--收藏功能-->
-                        <el-button icon="el-icon-star" :class="{ 'is-active':    post.isFavorited }"
+                        <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
                                    @click="toggleFavorite(post)">
                             {{ post.isFavorited ? '已收藏' : '收藏' }}
                         </el-button>
@@ -504,6 +701,78 @@
 
         </el-card>
     </el-dialog>
+
+    <!-- 我封禁的用户对话框 -->
+    <el-dialog
+            title="我的收藏"
+            :visible.sync="myBanUserDialogVisible"
+            :before-close="handleCloseMyBanUser"
+            width="50%"
+    >
+        <el-table
+                :data="myBanUserData"
+                height="400"
+                stripe
+                style="width: 100%">
+            <el-table-column
+                    prop="banUserId"
+                    label="用户id"
+                    width="100">
+            </el-table-column>
+            <el-table-column
+                    prop="username"
+                    label="用户昵称"
+                    width="150">
+            </el-table-column>
+            <el-table-column
+                    prop="plateName"
+                    label="所被封禁的板块"
+                    width="150">
+            </el-table-column>
+            <el-table-column
+                    align="center"
+                    label="操作">
+                <el-row slot-scope="scope">
+                    <el-button type="success" @click="reduceBan(scope.row)">解除封禁</el-button>
+                </el-row>
+            </el-table-column>
+        </el-table>
+    </el-dialog>
+
+    <!-- 历史记录对话框 -->
+    <el-dialog
+            title="历史记录"
+            :visible.sync="historicalRecordDialogVisible"
+            :before-close="handleCloseHistoricalRecord"
+            width="50%"
+    >
+        <el-card class="post-card" v-for="post in historicalRecordData" :key="post.id">
+            <template #header>
+                <div class="post-header">
+                    <span>{{ post.username }}</span>
+                    <div class="action-buttons">
+                        <!-- 浏览量显示 -->
+                        <span>{{ post.pageView }} 浏览</span>
+                        <!--收藏功能-->
+                        <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                   @click="toggleFavorite(post)">
+                            {{ post.isFavorited ? '已收藏' : '收藏' }}
+                        </el-button>
+                        <!--点赞功能-->
+                        <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                   @click="toggleLike(post)">
+                            {{ post.likes }} 赞
+                        </el-button>
+                    </div>
+                </div>
+            </template>
+            <img :src="post.image" alt="Post Image" class="post-image"/>
+            <div class="post-content">{{ post.content }}</div>
+
+            <el-button type="primary" @click="checkReview(post)">打开评论</el-button>
+            <el-button type="success" @click="deleteHistoricalRecord(post)">清理</el-button>
+        </el-card>
+    </el-dialog>
 </div>
 
 <script src="js/vue.js"></script>
@@ -512,12 +781,11 @@
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
-
     new Vue({
         el: '#app',
         mounted() {
             console.log(this.user.username);
-            this.selectAllPlate();
+            this.changeMenuHomePage();
         },
         data() {
             //制定密码规则
@@ -559,7 +827,8 @@
                     notice: '',
                     pageView: '',
                     likes: '',
-                    isLiked: false
+                    isLiked: false,
+                    isInterested: false
                 },
                 //帖子数据
                 post: {
@@ -570,10 +839,12 @@
                     likes: '',
                     plateId: '',
                     userId: '',
-                    releaseTime:'',
+                    releaseTime: '',
                     isLiked: false,
                     isFavorited: false,
-                    isUserBaned: false
+                    isUserBaned: false,
+                    isUserInterested: false,
+                    isMyself: false
                 },
                 //申请数据
                 audit: {
@@ -603,7 +874,26 @@
                 ban: {
                     id: '',
                     userId: '',
+                    banUserId: '',
                     plateId: ''
+                },
+                //关注板块数据
+                interestPlateList: {
+                    id: '',
+                    userId: '',
+                    interestedPlateId: ''
+                },
+                //关注用户数据
+                interestUserList: {
+                    id:'',
+                    userId:'',
+                    interestedUserId: ''
+                },
+                //历史记录数据
+                historicalRecord: {
+                    id:'',
+                    userId:'',
+                    postId:'',
                 },
                 //表单数据
                 form: {
@@ -658,6 +948,22 @@
                 reportedPostData: [],
                 //我的收藏帖子集合
                 myFavoritePostData: [],
+                //我封禁的用户集合
+                myBanUserData: [],
+                //用户关注的板块id数组
+                interestedPlateIds: [],
+                //用户关注的板块集合
+                interestedPlate: [],
+                //用户未关注的板块集合
+                unInterestedPlate: [],
+                //用户关注的用户id数组
+                interestedUserIds: [],
+                //用户关注的用户的帖子集合
+                interestedUserPosts: [],
+                //用户未关注的帖子集合
+                unInterestedUserPosts: [],
+                //历史记录帖子集合
+                historicalRecordData: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
@@ -680,10 +986,16 @@
                 postDetailsDialogVisible: false,
                 //我的收藏对话框
                 myFavoritePostDialogVisible: false,
+                //我封禁的用户对话框
+                myBanUserDialogVisible: false,
+                //历史记录对话框
+                historicalRecordDialogVisible: false,
                 //确认密码
                 checkPassword: '',
                 //用户ID到用户名的映射对象
                 userMap: {},
+                //板块id到板块名的映射对象
+                plateMap: {},
                 //标签导航
                 activeTab: '',
                 //主页标签导航
@@ -697,7 +1009,7 @@
                 }, {
                     postValue: '最多浏览',
                     label: '最多浏览'
-                },  {
+                }, {
                     postValue: '最多点赞',
                     label: '最多点赞'
                 }],
@@ -707,7 +1019,7 @@
                 plateOptions: [{
                     plateValue: '最多浏览',
                     label: '最多浏览'
-                },  {
+                }, {
                     plateValue: '最多点赞',
                     label: '最多点赞'
                 }],
@@ -837,8 +1149,14 @@
             handleClosePostDetails() {
                 this.postDetailsDialogVisible = false;
             },
-            handleCloseMyFavoritePost(){
+            handleCloseMyFavoritePost() {
                 this.myFavoritePostDialogVisible = false;
+            },
+            handleCloseMyBanUser() {
+                this.myBanUserDialogVisible = false;
+            },
+            handleCloseHistoricalRecord(){
+                this.historicalRecordDialogVisible = false;
             },
             //点击举报帖子信息事件
             infoClick1() {
@@ -851,10 +1169,19 @@
                 this.infoDialogVisible = true;
             },
             //切换至”主页“导航事件
-            changeMenuHomePage() {
+            async changeMenuHomePage() {
                 this.activeTab = null;
                 this.plateData = null;
-                this.selectAllPlate();
+                try { //加载所有板块
+                    await this.selectAllPlate();
+                    //加载用户对所有板块的关注情况
+                    await this.selectInterestPlateByPlateData(this.plateData);
+                    //得到用户关注的板块
+                    await this.selectInterestedPlateByUserId(this.plateData);
+                } catch (e) {
+                    console.log('切换至”主页“导航事件时报异常', e);
+                    return false;
+                }
             },
             //切换至”我的板块“导航事件
             changeMenuMyPlate() {
@@ -869,7 +1196,7 @@
                 try {
                     await this.addPlatePageView();
                     //先查询帖子
-                    await this.selectPostByPlateId();
+                    this.postData = await this.selectPostByPlateId();
                     //后查询收藏状态
                     await this.selectFavoritePost(this.postData)
                 } catch (error) {
@@ -881,20 +1208,69 @@
                 try {
                     //增加板块浏览量
                     await this.addPlatePageView();
-                    //先查询帖子
-                    await this.selectPostByPlateId();
-                    //后查询收藏状态
-                    await this.selectFavoritePost(this.postData);
+                    //刷新主页数据
+                    await this.loadingHomePageTab();
                 } catch (error) {
                     console.error('切换标签页执行过程中出错:', error);
                 }
             },
+            //刷新主页标签页数据
+            async loadingHomePageTab(){
+                try {
+                    //查询帖子
+                    await this.selectPostByPlateId();
+                    //查询关注用户状态
+                    await this.selectInterestUserListByPostData(this._postData);
+                    //查询收藏状态
+                    await this.selectFavoritePost(this._postData);
+                    //得到用户关注的用户的帖子
+                    await this.selectInterestedUserByUserId(this._postData);
+                } catch (e) {
+                    console.log('刷新主页数据时报异常时', e);
+                }
+                this.postData = this._postData;
+            },
             // “我的收藏“ 点击事件
-            myFavoritePost(){
+            async myFavoritePost() {
                 this.myFavoritePostDialogVisible = true;
+                try {
+                    //查询用户对应的收藏帖子信息
+                    await this.selectFavoritePostInfoByUserId();
+                    //查询收藏信息
+                    await this.selectFavoritePost(this.myFavoritePostData);
+                } catch (e) {
+                    console.log('点击"我的收藏"时报异常', e);
+                    return false;
+                }
+            },
+            //“我封禁的用户”点击事件
+            async myBanUser() {
+                try {
+                    //根据 用户id 查询 封禁表
+                    await this.selectBanByUserId();
+                    this.myBanUserDialogVisible = true;
+                } catch (e) {
+                    console.log('点击"我封禁的用户"时报异常', e);
+                    return false;
+                }
+            },
+            //"帖子足迹"点击事件
+            async myHistoricalRecord(){
+                this.historicalRecordDialogVisible = true;
+                try {
+                    //根据 用户id 查询 历史记录
+                    await this.selectHistoricalRecordByUserId();
+                    //查询收藏信息
+                    await this.selectFavoritePost(this.historicalRecordData);
+                } catch (e) {
+                    console.log('点击"帖子足迹"时报异常', e);
+                    return false;
+                }
             },
             //打开评论
             checkReview(post) {
+                //将帖子添加至历史记录
+                this.addHistoricalRecord(post);
                 this._postId = post.id;
                 this.reviewDialogVisible = true;
                 //查询帖子对应的评论
@@ -1015,8 +1391,6 @@
                     // 替换userId为用户名
                     this.replaceUserIdWithUsername(this._infoData);
                     this.infoData = this._infoData;
-                    console.log(this.userMap);
-                    console.log(this.infoData);
                 } catch (error) {
                     console.error('查询申请时出错', error);
                 }
@@ -1044,12 +1418,8 @@
             //替换userId为用户名
             replaceUserIdWithUsername(infoData) {
                 infoData.forEach(info => {
-                    console.log(this.userMap);
-                    // console.log(this.userMap[2]);
-                    //
                     info.username = this.userMap[info.userId] || '未知用户';
                 });
-
             },
             //管理员允许创建板块
             allowAudit(row) {
@@ -1069,6 +1439,21 @@
                             this.updateAuditStatus(row.id);
                         }
                     })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消允许'
+                    });
+                });
+            },
+            //管理不允许用户创建板块
+            unAllowAudit(row) {
+                this.$confirm('确定拒绝该用户创建对应板块吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.updateAuditStatus(row.id);
                 }).catch(() => {
                     this.$message({
                         type: 'info',
@@ -1149,16 +1534,17 @@
                         //显示作者
                         this.userMap = await this.buildUserMap(this._postData);
                         this.replaceUserIdWithUsername(this._postData);
-                        this.postData = this._postData;
+                        //this.postData = this._postData;
                     } else {
                         //无数据
-                        this.postData = null;
+                        this._postData = null;
                         //该板块暂无帖子
                         this.$notify.info({
                             title: '消息',
                             message: '该板块暂无帖子~'
                         });
                     }
+                    return this._postData;
                 } catch (error) {
                     console.error('查询post时出错误', error);
                 }
@@ -1190,10 +1576,19 @@
                                 //添加成功
                                 //消息提示
                                 this.$message.success('发布帖子成功！');
+                                //清空对应表单数据
+                                this.form3.content = null;
+                                this.form3.image = null;
                                 //关闭对话框
                                 this.handleClosePost();
                                 //重新加载数据
-                                this.selectPostByPlateId();
+                                if (this.activeIndex === '1') {
+                                    //如果是在主页界面
+                                    this.loadingHomePageTab();
+                                } else if (this.activeIndex === '2') {
+                                    //如果是在我的板块
+                                    this.postData = this.selectPostByPlateId();
+                                }
                             }
                         })
                     } else {
@@ -1373,6 +1768,9 @@
             },
             //查询帖子收藏状态
             async selectFavoritePost(postData) {
+                if (postData === null) {
+                    return false;
+                }
                 postData.forEach(post => {
                     axios({
                         method: 'get',
@@ -1384,7 +1782,7 @@
                         this.$forceUpdate();
                     })
                 })
-                console.log(postData);
+                //console.log(postData);
             },
             // 切换收藏状态
             toggleFavorite(post) {
@@ -1435,16 +1833,21 @@
                 })
             },
             //查询所有板块
-            selectAllPlate() {
-                axios({
-                    method: 'get',
-                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectAllPlate'
-                }).then(resp => {
+            async selectAllPlate() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/selectAllPlate'
+                    })
                     if (resp.data !== 'fail') {
                         //有板块数据
                         this.plateData = resp.data;
+                        return resp.data;
                     }
-                })
+                } catch (e) {
+                    console.log('查询所有板块时报异常', e);
+                    return false;
+                }
             },
             //举报帖子事件
             reportPostClick(post) {
@@ -1548,12 +1951,12 @@
                 })
             },
             //根据用户id和板块id查询封禁表
-            async selectBanByUserIdAndPlateId(userId, plateId) {
+            async selectBanByUserIdAndPlateId(banUserId, plateId) {
                 try {
                     const resp = await axios({
                         method: 'get',
                         url: 'http://localhost:8080/Technical-Forum/banServlet/selectByUserIdAndPlateId',
-                        params: {userId: userId, plateId: plateId}
+                        params: {banUserId: banUserId, plateId: plateId}
                     })
                     if (resp.data !== 'fail') {
                         //有数据
@@ -1582,7 +1985,7 @@
                     axios({
                         method: 'get',
                         url: 'http://localhost:8080/Technical-Forum/banServlet/selectByUserIdAndPlateId',
-                        params: {userId: post.userId, plateId: post.plateId}
+                        params: {banUserId: post.userId, plateId: post.plateId}
                     }).then(resp => {
                         if (resp.data !== 'fail') {
                             //用户已被封禁
@@ -1597,7 +2000,8 @@
                             } else {
                                 //不是用户自己
                                 //添加封禁用户
-                                this.ban.userId = post.userId;
+                                this.ban.userId = this.user.id;
+                                this.ban.banUserId = post.userId;
                                 this.ban.plateId = post.plateId;
                                 axios({
                                     method: 'post',
@@ -1700,7 +2104,7 @@
                 axios({
                     method: 'get',
                     url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByName',
-                    params: {plateName : this.plateForm.vaguePlateName, select : this.plateValue}
+                    params: {plateName: this.plateForm.vaguePlateName, select: this.plateValue}
                 }).then(resp => {
                     if (resp.data !== 'fail') {
                         //有数据
@@ -1711,13 +2115,33 @@
                     }
                 })
             },
+            //搜索帖子
+            async searchPost(){
+
+                try {
+                    //根据条件查询
+                    await this.selectPostByContentAndPlateId();
+                    //加载帖子收藏状态
+                    await this.selectFavoritePost(this._postData);
+                    //加载关注用户状态
+                    await this.selectInterestUserListByPostData(this._postData);
+                } catch (e) {
+                    console.log('搜索帖子时报异常', e);
+                }
+                this.interestedUserPosts = this._postData;
+                this.unInterestedUserPosts = null;
+            },
             //根据 帖子内容 模糊查询 帖子
             async selectPostByContentAndPlateId() {
                 try {
                     const resp = await axios({
                         method: 'get',
                         url: 'http://localhost:8080/Technical-Forum/postServlet/selectPostByContentAndPlateId',
-                        params: {content: this.postForm.vaguePostContent, plateId: this.activeTab, select: this.postValue}
+                        params: {
+                            content: this.postForm.vaguePostContent,
+                            plateId: this.activeTab,
+                            select: this.postValue
+                        }
                     })
                     if (resp.data !== 'fail') {
                         //有数据
@@ -1725,17 +2149,13 @@
                         //显示作者
                         this.userMap = await this.buildUserMap(this._postData);
                         this.replaceUserIdWithUsername(this._postData);
-                        //加载帖子收藏状态
-                        await this.selectFavoritePost(this._postData);
-                        this.postData = this._postData;
-                        return resp.data;
                     } else {
                         this.$message.error('没有搜索到相关内容');
                     }
+                    return this._postData;
                 } catch (e) {
-                    console.log('搜索帖子时报异常',e);
+                    console.log('根据内容查询帖子时报异常', e);
                 }
-
             },
             //切换板块点赞状态
             togglePlateLike(plate) {
@@ -1778,6 +2198,375 @@
                     return resp.data;
                 } catch (e) {
                     console.log('增加板块浏览量时报异常'.e);
+                    return false;
+                }
+            },
+            //根据 用户id 查询 所收藏的帖子信息
+            async selectFavoritePostInfoByUserId() {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/favoritePostServlet/selectPostsByUserId',
+                        data: this.user.id
+                    })
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this.myFavoritePostData = resp.data;
+                        //显示作者名字
+                        this.userMap = await this.buildUserMap(this.myFavoritePostData);
+                        this.replaceUserIdWithUsername(this.myFavoritePostData);
+
+                        return resp.data;
+                    } else {
+                        this.myFavoritePostData = null;
+                        //无数据
+                        this.$message.info('暂无收藏信息');
+                    }
+                } catch (e) {
+                    console.log('查询用户所收藏的帖子信息时报异常', e);
+                    return false;
+                }
+            },
+            //根据 用户id 查询 封禁表
+            async selectBanByUserId() {
+                const resp = await axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/banServlet/selectBanByUserId',
+                    params: {userId: this.user.id}
+                })
+                if (resp.data !== 'fail') {
+                    //有数据
+                    this.myBanUserData = resp.data;
+                    //显示被封禁的用户昵称和板块名称
+                    this.userMap = await this.buildBanUserMap(this.myBanUserData);
+                    this.plateMap = await this.buildPlateMap(this.myBanUserData);
+                    this.replaceBanUserIdWithUsername(this.myBanUserData);
+                    this.replacePlateWithPlateName(this.myBanUserData);
+                    return resp.data;
+                } else {
+                    this.myBanUserData = null;
+                    this.$message.info('暂无所封禁用户信息');
+                    return false;
+                }
+            },
+            //构建被封禁用户ID到用户名的映射对象
+            async buildBanUserMap(infoData) {
+                const userMap = {};
+                for (const info of infoData) {
+                    try {
+                        const resp = await axios({
+                            //发送ajax请求
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
+                            params: {id: info.banUserId}
+                        });
+                        if (resp.data !== 'fail') {
+                            userMap[info.banUserId] = resp.data.username;
+                        }
+                    } catch (error) {
+                        console.error('获取用户信息时出错', error);
+                    }
+                }
+                return userMap;
+            },
+            //替换banUserId为用户名
+            replaceBanUserIdWithUsername(infoData) {
+                infoData.forEach(info => {
+                    info.username = this.userMap[info.banUserId] || '未知用户';
+                });
+            },
+            //构建 板块id 到 板块名 的映射对象
+            async buildPlateMap(infoData) {
+                const plateMap = {};
+                for (const info of infoData) {
+                    try {
+                        const resp = await axios({
+                            //发送ajax请求
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateById',
+                            params: {plateId: info.plateId}
+                        });
+                        if (resp.data !== 'fail') {
+                            plateMap[info.plateId] = resp.data.name;
+                        }
+                    } catch (error) {
+                        console.error('获取用户信息时出错', error);
+                    }
+                }
+                return plateMap;
+            },
+            //替换userId为用户名
+            replacePlateWithPlateName(infoData) {
+                infoData.forEach(info => {
+                    info.plateName = this.plateMap[info.plateId] || '未知板块';
+                });
+            },
+            //在 我封禁的用户 中 解除封禁
+            reduceBan(row) {
+                this.$confirm('解封后该用户将可在对应板块发布帖子，是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.ban.userId = row.userId;
+                    this.ban.banUserId = row.banUserId;
+                    this.ban.plateId = row.plateId;
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/banServlet/deleteBan',
+                        data: this.ban
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //解除封禁成功
+                            this.$message.success('解除封禁成功！');
+                            //重新加载数据
+                            this.selectBanByUserId();
+                            this.$forceUpdate();
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消解封'
+                    });
+                });
+            },
+            //通过 板块集合 查询 关注板块列表
+            async selectInterestPlateByPlateData(plateData) {
+                if (plateData == null) {
+                    return false;
+                }
+                try {
+                    for (const plate of plateData) {
+                        axios({
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/interestPlateListServlet/selectInterestPlateListByUserIdAndPlateId',
+                            params: {userId: this.user.id, plateId: plate.id}
+                        }).then(resp => {
+                            plate.isInterested = resp.data !== 'fail';
+                            return resp.data;
+                        })
+                    }
+                } catch (e) {
+                    console.log('查询关注板块列表时报异常', e);
+                    return false;
+                }
+            },
+            //切换 用户关注板块 状态
+            toggleInterestPlate(plate) {
+                this.interestPlateList.userId = this.user.id;
+                this.interestPlateList.interestedPlateId = this.activeTab;
+                if (!plate.isInterested) {
+                    //执行增加关注板块列表
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/interestPlateListServlet/addInterestPlateList',
+                        data: this.interestPlateList
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //关注板块成功
+                            this.$message.success('关注板块成功！');
+                            plate.isInterested = !plate.isInterested;
+                            this.$forceUpdate();
+                        }
+                    })
+                } else {
+                    this.$confirm('确认取消关注该板块吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        //执行删除关注板块列表
+                        axios({
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/interestPlateListServlet/deleteInterestPlateList',
+                            data: this.interestPlateList
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //关注板块成功
+                                this.$message.success('取消关注板块成功！');
+                                plate.isInterested = !plate.isInterested;
+                                this.$forceUpdate();
+                            }
+                        })
+                    })
+                }
+            },
+            //根据 帖子集合 查询 关注用户列表
+            async selectInterestUserListByPostData(postData){
+                if (postData == null) {
+                    return false;
+                }
+                try {
+                    for (const post of postData) {
+                        if (this.user.id == post.userId){
+                            //帖子作者是用户自己
+                            post.isMyself = true;
+                            continue;
+                        }
+                        //帖子作者不是用户自己
+                        axios({
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/interestUserListServlet/selectInterestUserListByUserIdAndInterestedUserId',
+                            params: {userId: this.user.id, interestedUserId: post.userId}
+                        }).then(resp => {
+                            post.isUserInterested = resp.data !== 'fail';
+                            this.$forceUpdate();
+                            return resp.data;
+                        })
+                    }
+                } catch (e) {
+                    console.log('查询关注用户列表时报异常', e);
+                    return false;
+                }
+            },
+            //切换 关注用户状态
+            toggleInterestUser(post){
+                this.interestUserList.userId = this.user.id;
+                this.interestUserList.interestedUserId = post.userId;
+                if (!post.isUserInterested) {
+                    //执行增加关注用户列表
+                    axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/interestUserListServlet/addInterestUserList',
+                        data: this.interestUserList
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //关注板块成功
+                            this.$message.success('关注用户成功！');
+                            post.isUserInterested = !post.isUserInterested;
+                            //重新加载状态
+                            this.loadingHomePageTab();
+                        }
+                    })
+                } else {
+                    this.$confirm('确认取消关注该用户吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        //执行删除关注板块列表
+                        axios({
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/interestUserListServlet/deleteInterestUserList',
+                            data: this.interestUserList
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //关注板块成功
+                                this.$message.success('取消关注用户成功！');
+                                post.isUserInterested = !post.isUserInterested;
+                                //重新加载该状态
+                                this.loadingHomePageTab();
+                            }
+                        })
+                    })
+                }
+            },
+            //根据 用户id 查询 关注板块列表
+            async selectInterestedPlateByUserId(plateData){
+                const resp = await axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/interestPlateListServlet/selectInterestPlateListByUserId',
+                    params: {userId : this.user.id}
+                })
+                if (resp.data !== 'fail') {
+                    //用户有关注相关板块
+                    //将板块id依次存入对应id数组中
+                    this.interestedPlateIds = resp.data.map(item => item.interestedPlateId);
+                } else {
+                    //用户没有关注相关板块
+                    this.interestedPlateIds = null;
+                }
+                //将对应板块存入集合中
+                this.interestedPlate = plateData.filter(plate => this.interestedPlateIds.includes(plate.id));
+                this.unInterestedPlate = plateData.filter(plate => !this.interestedPlateIds.includes(plate.id));
+                console.log(this.interestedPlate);
+            },
+            //根据 用户id 查询 关注用户列表
+            async selectInterestedUserByUserId(postData){
+                const resp = await axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/interestUserListServlet/selectInterestUserListByUserId',
+                    params: {userId : this.user.id}
+                })
+                if (resp.data !== 'fail') {
+                    //用户有关注相关用户
+                    //将板块id依次存入对应id数组中
+                    this.interestedUserIds = resp.data.map(item => item.interestedUserId);
+                    console.log(this.interestedUserIds);
+                } else {
+                    //用户没有关注相关用户
+                    this.interestedUserIds = null;
+                }
+                //将对应用户的帖子存入集合中
+                this.interestedUserPosts = postData.filter(post => this.interestedUserIds.includes(post.userId));
+                this.unInterestedUserPosts = postData.filter(post => !this.interestedUserIds.includes(post.userId));
+                console.log(this.interestedUserPosts);
+            },
+            //增加历史记录
+            addHistoricalRecord(post){
+                this.historicalRecord.userId = this.user.id;
+                this.historicalRecord.postId = post.id;
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/historicalRecordServlet/addHistoricalRecord',
+                    data: this.historicalRecord
+                }).then(resp => {
+                    if (resp.data === 'fail') {
+                        this.$message.error('增加历史记录时出错');
+                    }
+                })
+            },
+            //删除历史记录
+            deleteHistoricalRecord(post) {
+                this.$confirm('确认清理该记录吗?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.historicalRecord.userId = this.user.id;
+                    this.historicalRecord.postId = post.id;
+                    axios({
+                        method:'post',
+                        url:'http://localhost:8080/Technical-Forum/historicalRecordServlet/deleteHistoricalRecord',
+                        data: this.historicalRecord
+                    }).then(resp => {
+                        if (resp.data === 'success') {
+                            //清理成功
+                            //消息提示
+                            this.$message.success('清理记录成功！');
+                            //重新加载数据
+                            this.selectHistoricalRecordByUserId();
+                        }
+                    })
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消清理'
+                    });
+                });
+            },
+            //查看历史记录
+            async selectHistoricalRecordByUserId(){
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/historicalRecordServlet/selectHistoricalRecordByUserId',
+                        params: {userId: this.user.id}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有历史记录信息
+                        this.historicalRecordData = resp.data;
+                        //显示作者名字
+                        this.userMap = await this.buildUserMap(this.historicalRecordData);
+                        await this.replaceUserIdWithUsername(this.historicalRecordData);
+                    } else {
+                        this.historicalRecordData = null;
+                        this.$message.info('暂无历史记录信息~');
+                    }
+                    return this.historicalRecordData;
+                } catch (e) {
+                    console.log('查询历史记录信息时报异常', e);
                     return false;
                 }
             }

@@ -1,10 +1,13 @@
 package com.yeqian.service;
 
 import com.yeqian.pojo.FavoritePost;
+import com.yeqian.pojo.Post;
 import com.yeqian.util.mybatis.annotations.Delete;
 import com.yeqian.util.mybatis.annotations.Insert;
 import com.yeqian.util.mybatis.annotations.Param;
 import com.yeqian.util.mybatis.annotations.Select;
+
+import java.util.List;
 
 public interface FavoritePostService {
 
@@ -35,4 +38,12 @@ public interface FavoritePostService {
      * @param postId
      */
     void deleteByPostId(Integer postId);
+
+
+    /**
+     * 根据 用户id 查询 所收藏的帖子
+     * @param userId
+     * @return
+     */
+    List<Post> selectPostsByUserId(Integer userId);
 }
