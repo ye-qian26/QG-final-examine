@@ -916,16 +916,14 @@
             :before-close="handleClosePrivateChat"
             width="50%"
     >
-        <template #content>
-            <div class="chat-messages">
-                <!--消息展示-->
-                <div v-for="(message, index) in chatMessages" :key="index">{{ message }}</div>
-            </div>
-            <!--消息输入框-->
-            <el-input v-model="chatInput" placeholder="输入消息"></el-input>
-            <el-button type="success" @click="sendMessage">发送</el-button>
-        </template>
+        <div class="chat-messages">
+            <!--消息展示-->
+            <div v-for="(message, index) in chatMessages" :key="index">{{ message }}</div>
+        </div>
         <template #footer>
+            <!--消息输入框-->
+            <el-input type="textarea" v-model="chatInput" placeholder="输入消息"></el-input>
+            <el-button type="success" @click="sendMessage">发送</el-button>
             <el-button @click="handleClosePrivateChat">关闭</el-button>
         </template>
 
@@ -944,13 +942,10 @@
         el: '#app',
         mounted() {
             console.log(this.user.username);
+            //加载主页板块信息
             this.changeMenuHomePage();
             //初始化webSocket连接
-            this.socket = new WebSocket('ws://' + window.location.hostname + ':8080');
-            this.socket.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-                this.chatMessages.push(`${message.sender} : ${message.content}`);
-            }
+            this.initialWebSocket();
         },
         data() {
             //制定密码规则
@@ -1076,6 +1071,14 @@
                     userId: '',
                     banUserId: ''
                 },
+                //聊天记录数据
+                chatRecord: {
+                    id:'',
+                    senderId:'',
+                    receiverId:'',
+                    content:'',
+                    sendTime:''
+                },
                 //表单数据
                 form: {
                     name: localStorage.getItem('username'),
@@ -1155,6 +1158,8 @@
                 historicalRecordData: [],
                 //被封禁的账号集合
                 bannedAccountData: [],
+                //聊天记录集合
+                chatRecordData: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
@@ -1287,23 +1292,57 @@
             }
         },
         methods: {
+            //初始化webSocket连接
+            initialWebSocket(){
+                this.socket = new WebSocket('ws://localhost:8081/ws/chat');
+                //开启连接
+                this.socket.onopen = () => {
+                    console.log('连接成功');
+                    //用户登录完成则加入连接
+                    const message = {
+                        sender: this.user.username,
+                        receiver: '',
+                        content: ''
+                    }
+                    this.socket.send(JSON.stringify(message));
+                };
+                this.socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    this.chatMessages.push(`${message.sender} : ${message.content}`);
+                };
+
+                //关闭连接
+                this.socket.onclose = () => {
+                    console.log('连接关闭');
+                };
+            },
             //打开私聊窗口
-            privateChat(post) {
-                this.currentChatUser = post.username + post.userId;
-                this.privateChatDialogVisible = true;
+            async privateChat(post) {
                 this.chatMessages = [];
+                this._userId = post.userId;
+                //查询聊天记录
+                await this.selectChatRecordBySendIdAndReceiverId(post.userId);
+                this.currentChatUser = post.username;
+                this.privateChatDialogVisible = true;
             },
             //发送消息
             sendMessage() {
                 if (this.chatInput !== '') {
-                    const message = {
-                        sender: this.user.name + this.user.id,
-                        receiver: this.currentChatUser,
-                        content: this.chatInput
+                    if (this.chatInput.length > 64) {
+                        this.$message.error('输入内容过长，最多为64个字符')
+                    } else {
+                        const message = {
+                            sender: this.user.username,
+                            receiver: this.currentChatUser,
+                            content: this.chatInput
+                        }
+                        this.socket.send(JSON.stringify(message));
+                        this.chatMessages.push(`${message.sender} : ${message.content}`);
+                        this.addChatRecord(this.chatInput);
+                        this.chatInput = '';
                     }
-                    this.socket.send(JSON.stringify(message));
-                    this.chatMessages.push(`${message.sender} : ${message.content}`);
-                    this.chatInput = '';
+                } else {
+                    this.$message.error('输入内容不得为空');
                 }
             },
             handleSelect(key) {
@@ -3014,6 +3053,61 @@
                     this.bannedAccountData = null;
                     this.$message.info('暂无已封禁账号');
                 }
+            },
+            //查询 两个用户 之间的 聊天记录
+            async selectChatRecordBySendIdAndReceiverId(userId) {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/chatRecordServlet/selectChatRecordBySenderIdAndReceiverId',
+                        params: {senderId: this.user.id, receiverId: userId}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有聊天记录
+                        this.chatRecordData = resp.data;
+                        await this.buildSenderMap(this.chatMessages, this.chatRecordData);
+                    } else {
+                        //无聊天记录
+                        this.chatMessages = [];
+                    }
+                    return this.chatMessages;
+                } catch (e) {
+                    console.log('查询聊天记录时报异常', e);
+                    return false;
+                }
+            },
+            //发送者id 到 发送者昵称 的映射
+            async buildSenderMap(chatMessages, chatRecordData){
+                if (chatRecordData === null) {
+                    return;
+                }
+                chatRecordData.forEach(chatRecord => {
+                    axios({
+                        method:'get',
+                        url:'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
+                        params: {id : chatRecord.senderId}
+                    }).then(resp => {
+                        if (resp.data !== 'fail') {
+                            //有数据
+                            chatMessages.push(`${resp.data.username} : ${chatRecord.content}`);
+                        }
+                    })
+                })
+            },
+            //增加 聊天记录
+            addChatRecord(chatInput) {
+                this.chatRecord.content = chatInput;
+                this.chatRecord.senderId = this.user.id;
+                this.chatRecord.receiverId = this._userId;
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/chatRecordServlet/addChatRecord',
+                    data:this.chatRecord
+                }).then(resp => {
+                    if (resp.data === 'fail') {
+                        this.$message.error('添加聊天记录出错');
+                    }
+                })
             }
         }
     })

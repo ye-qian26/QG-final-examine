@@ -16,14 +16,14 @@
       <scope>test</scope>
     </dependency>
 
-    <!--mysql-->
+    <!-- mysql -->
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
       <version>5.1.46</version>
     </dependency>
 
-    <!--servlet-->
+    <!-- servlet -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
@@ -31,32 +31,51 @@
       <scope>provided</scope>
     </dependency>
 
-    <!--fastjson-->
+    <!-- fastjson -->
     <dependency>
       <groupId>com.alibaba</groupId>
       <artifactId>fastjson</artifactId>
       <version>1.2.83</version>
     </dependency>
 
-    <!--commons-fileupload-->
+    <!-- commons-fileupload -->
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
       <version>1.5</version>
     </dependency>
 
-    <!--commons-io-->
+    <!-- Commons-io -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.14.0</version>
     </dependency>
 
-    <!--org.json-->
+    <!-- Json -->
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>org.json</artifactId>
       <version>chargebee-1.0</version>
+    </dependency>
+
+    <!-- Javax.websocket -->
+    <dependency>
+      <groupId>javax.websocket</groupId>
+      <artifactId>javax.websocket-api</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <!-- Tyrus Server -->
+    <dependency>
+      <groupId>org.glassfish.tyrus</groupId>
+      <artifactId>tyrus-server</artifactId>
+      <version>1.17</version>
+    </dependency>
+    <!-- Tyrus Container Grizzly -->
+    <dependency>
+      <groupId>org.glassfish.tyrus</groupId>
+      <artifactId>tyrus-container-grizzly-server</artifactId>
+      <version>1.17</version>
     </dependency>
 <!--    &lt;!&ndash;logback&ndash;&gt;-->
 <!--    <dependency>-->
