@@ -79,6 +79,9 @@ public class UserServlet extends BaseServlet {
         //3.执行service方法
         User user = userService.selectUser(tele, password);
         if (user != null) {
+            //创建session会话
+            HttpSession session = req.getSession();
+            session.setAttribute("user", user);
 
             if ("true".equals(checked)) {
                 //用户勾选记住信息

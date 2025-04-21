@@ -104,4 +104,11 @@ public interface PostService {
      * @return
      */
     List<Post> selectPostByPlateIdWithLikes(Integer plateId);
+
+    /**
+     * 通过 用户id 查询 帖子
+     * @param userId
+     * @return
+     */
+    List<Post> selectPostByUserId(Integer userId);
 }

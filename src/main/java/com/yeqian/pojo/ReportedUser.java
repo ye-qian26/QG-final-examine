@@ -7,14 +7,24 @@ public class ReportedUser {
     private Integer id;
     private Integer userId;
     private String reportContent;
+    private Integer isClean;
 
     public ReportedUser() {
     }
 
-    public ReportedUser(Integer id, Integer userId, String reportContent) {
+    public ReportedUser(Integer id, Integer userId, String reportContent, Integer isClean) {
         this.id = id;
         this.userId = userId;
         this.reportContent = reportContent;
+        this.isClean = isClean;
+    }
+
+    public Integer getIsClean() {
+        return isClean;
+    }
+
+    public void setIsClean(Integer isClean) {
+        this.isClean = isClean;
     }
 
     public Integer getId() {
@@ -47,6 +57,7 @@ public class ReportedUser {
                 "id=" + id +
                 ", userId=" + userId +
                 ", reportContent='" + reportContent + '\'' +
+                ", isClean=" + isClean +
                 '}';
     }
 }

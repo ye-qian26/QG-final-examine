@@ -80,4 +80,9 @@ public class PostServiceImpl implements PostService {
     public List<Post> selectPostByPlateIdWithLikes(Integer plateId) {
         return postMapper.selectPostByPlateIdWithLikes(plateId);
     }
+
+    @Override
+    public List<Post> selectPostByUserId(Integer userId) {
+        return postMapper.selectPostByUserId(userId);
+    }
 }

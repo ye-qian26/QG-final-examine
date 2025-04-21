@@ -9,16 +9,26 @@ public class ReportedPost {
     private Integer plateId;
     private Integer postId;
     private String reportContent;
+    private Integer isClean;
 
     public ReportedPost() {
     }
 
-    public ReportedPost(Integer id, Integer userId, Integer plateId, Integer postId, String reportContent) {
+    public ReportedPost(Integer id, Integer userId, Integer plateId, Integer postId, String reportContent, Integer isClean) {
         this.id = id;
         this.userId = userId;
         this.plateId = plateId;
         this.postId = postId;
         this.reportContent = reportContent;
+        this.isClean = isClean;
+    }
+
+    public Integer getIsClean() {
+        return isClean;
+    }
+
+    public void setIsClean(Integer isClean) {
+        this.isClean = isClean;
     }
 
     public Integer getPlateId() {
@@ -69,6 +79,7 @@ public class ReportedPost {
                 ", plateId=" + plateId +
                 ", postId=" + postId +
                 ", reportContent='" + reportContent + '\'' +
+                ", isClean=" + isClean +
                 '}';
     }
 }

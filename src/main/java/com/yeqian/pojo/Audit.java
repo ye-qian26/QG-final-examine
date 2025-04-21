@@ -8,15 +8,25 @@ public class Audit {
     private Integer userId;
     private String plateName;
     private Integer status;
+    private Integer isClean;
 
     public Audit() {
     }
 
-    public Audit(Integer id, Integer userId, String plateName, Integer status) {
+    public Audit(Integer id, Integer userId, String plateName, Integer status, Integer isClean) {
         this.id = id;
         this.userId = userId;
         this.plateName = plateName;
         this.status = status;
+        this.isClean = isClean;
+    }
+
+    public Integer getIsClean() {
+        return isClean;
+    }
+
+    public void setIsClean(Integer isClean) {
+        this.isClean = isClean;
     }
 
     public Integer getId() {
@@ -66,6 +76,7 @@ public class Audit {
                 ", userId=" + userId +
                 ", plateName='" + plateName + '\'' +
                 ", status=" + status +
+                ", isClean=" + isClean +
                 '}';
     }
 }

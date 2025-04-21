@@ -280,4 +280,28 @@ public class PostServlet extends BaseServlet {
             }
         }
     }
+
+    /**
+     * 根据 用户id 查询 帖子
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectPostByUserId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String _userId = req.getReader().readLine();
+        //3.转换数据
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        //4.执行service方法
+        List<Post> posts = postService.selectPostByUserId(userId);
+        //5.响应数据
+        if (posts != null && !posts.isEmpty()) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(posts));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
 }

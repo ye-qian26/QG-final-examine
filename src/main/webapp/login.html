@@ -64,7 +64,6 @@
             let searchParams = new URLSearchParams(window.location.search);
             this.loginMsg = searchParams.get("loginMsg");
 
-
             this.form.tele = this.getCookie('tele');
             this.form.password = this.getCookie('password');
         },
@@ -136,6 +135,7 @@
                             params: {checkCode : this.form.checkCode}
                         }).then(resp =>{
                             if (resp.data === "success"){
+
                                 this.user.tele = this.form.tele;
                                 this.user.password = this.form.password;
                                 //发送ajax请求
@@ -147,91 +147,40 @@
                                     if (resp.data !== 'fail'){
                                         //登录成功
                                         this.user = resp.data;
-                                        //消息提示
-                                        this.$message({
-                                            type:'success',
-                                            message:'登录成功！'
-                                        })
-                                        // 登录成功，将相关信息存储到localStorage
-                                        localStorage.setItem('id', this.user.id);
-                                        localStorage.setItem('username', this.user.username);
-                                        localStorage.setItem('tele', this.user.tele);
-                                        localStorage.setItem('headPortrait', this.user.headPortrait);
-                                        localStorage.setItem('role', this.user.role);
+                                        //判断账号是否被封禁
+                                        axios({
+                                            method:'post',
+                                            url:'http://localhost:8080/Technical-Forum/accountBanServlet/selectAccountBanByBanUserId',
+                                            data: this.user.id
+                                        }).then(resp => {
+                                            if (resp.data !== 'fail'){
+                                                //该账号已被封禁
+                                                this.$message.error('该账号因违规已被封禁');
+                                            } else {
+                                                //未被封禁
+                                                //消息提示
+                                                this.$message({
+                                                    type:'success',
+                                                    message:'登录成功！'
+                                                })
+                                                // 登录成功，将相关信息存储到localStorage
+                                                localStorage.setItem('id', this.user.id);
+                                                localStorage.setItem('username', this.user.username);
+                                                localStorage.setItem('tele', this.user.tele);
+                                                localStorage.setItem('headPortrait', this.user.headPortrait);
+                                                localStorage.setItem('role', this.user.role);
 
-                                        this.changeCheckCode();
-                                        // 跳转到user.html
-                                        window.location.href ='user.html';
+                                                // 跳转到user.html
+                                                window.location.href ='user.html';
+                                            }
+                                            this.changeCheckCode();
+                                        })
+
                                     } else {
                                         //登录失败
                                         this.$message.error('登录失败，请检查个人信息！')
                                     }
                                 })
-                                // //输入正确
-                                // //发送ajax请求
-                                // if (this.form.select === '用户') {
-                                //     //如果是用户
-                                //     this.user.tele = this.form.tele;
-                                //     this.user.password = this.form.password;
-                                //     //发送ajax请求
-                                //     axios({
-                                //         method: 'get',
-                                //         url: 'http://localhost:8080/Technical-Forum/userServlet/loginUser?tele='
-                                //         + this.user.tele + '&password=' + this.user.password + '&checked=' + this.checked
-                                //     }).then(resp => {
-                                //         if (resp.data !== 'fail'){
-                                //             //登录成功
-                                //             this.user = resp.data;
-                                //             //消息提示
-                                //             this.$message({
-                                //                 type:'success',
-                                //                 message:'用户登录成功！'
-                                //             })
-                                //             // 登录成功，将相关信息存储到localStorage
-                                //             localStorage.setItem('userId', this.user.id);
-                                //             localStorage.setItem('username', this.user.username);
-                                //             localStorage.setItem('userTele', this.user.tele);
-                                //             localStorage.setItem('userHeadPortrait', this.user.headPortrait);
-                                //             this.changeCheckCode();
-                                //             // 跳转到user.html
-                                //             window.location.href ='user.html';
-                                //         } else {
-                                //             //登录失败
-                                //             this.$message.error('登录失败，请检查个人信息！')
-                                //         }
-                                //     })
-                                // } else {
-                                //     //如果是管理员
-                                //     this.administrator.tele = this.form.tele;
-                                //     this.administrator.password = this.form.password;
-                                //     //发送ajax请求
-                                //     axios({
-                                //         method: 'get',
-                                //         url: 'http://localhost:8080/Technical-Forum/administratorServlet/loginAdministrator?tele='
-                                //             + this.administrator.tele + '&password=' + this.administrator.password + '&checked=' + this.checked
-                                //     }).then(resp => {
-                                //         if (resp.data !== 'fail'){
-                                //             //登录成功
-                                //             this.administrator = resp.data;
-                                //
-                                //             localStorage.setItem('administratorId', this.administrator.id);
-                                //             localStorage.setItem('administratorName', this.administrator.name);
-                                //             localStorage.setItem('administratorTele', this.administrator.tele);
-                                //             localStorage.setItem('administratorHeadPortrait', this.administrator.headPortrait);
-                                //             //消息提示
-                                //             this.$message({
-                                //                 type:'success',
-                                //                 message:'用户登录成功！'
-                                //             })
-                                //             // 跳转到administrator.html
-                                //             window.location.href ='administrator.html';
-                                //         } else {
-                                //             //登录失败
-                                //             this.$message.error('登录失败，请检查个人信息！')
-                                //         }
-                                //     })
-                                //
-                                // }
                             } else if (resp.data === "fail"){
                                 //验证码输入错误
                                 this.$message.error('验证码错误');

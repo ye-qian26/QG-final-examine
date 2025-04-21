@@ -27,7 +27,7 @@ public interface PostMapper {
                  @Param("plateId") Integer plateId, @Param("userId") Integer userId, @Param("releaseTime") String releaseTime);
 
     /**
-     *
+     * 通过 id 删除 帖子
      * @param id
      */
     @Delete("delete from post where id = #{id}")
@@ -121,4 +121,12 @@ public interface PostMapper {
      */
     @Select("select * from post where plate_id = #{plateId} order by likes desc")
     List<Post> selectPostByPlateIdWithLikes(@Param("plateId") Integer plateId);
+
+    /**
+     * 通过 用户id 查询 帖子
+     * @param userId
+     * @return
+     */
+    @Select("select * from post where user_id = #{userId}")
+    List<Post> selectPostByUserId(@Param("userId") Integer userId);
 }

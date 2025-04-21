@@ -11,21 +11,21 @@ public interface AuditMapper {
      * 添加申请
      * @param audit
      */
-    @Insert("insert audit values (null, #{userId}, #{plateName}, #{status})")
+    @Insert("insert audit values (null, #{userId}, #{plateName}, #{status}, #{isClean})")
     void addAudit(Audit audit);
 
     /**
-     * 查询所有申请
+     * 查询所有申请（未被清理）
      * @return
      */
-    @Select("select * from audit")
+    @Select("select * from audit where is_clean = 0")
     List<Audit> selectAllAudit();
 
     /**
      * 根据id删除申请数据
      * @param id
      */
-    @Delete("delete from audit where id = #{id}")
+    @Update("update audit set is_clean = 1 where id = #{id}")
     void deleteAuditById(@Param("id") Integer id);
 
     /**
