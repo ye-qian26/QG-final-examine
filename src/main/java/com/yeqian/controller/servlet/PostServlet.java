@@ -7,6 +7,7 @@ import com.yeqian.service.PlateService;
 import com.yeqian.service.PostService;
 import com.yeqian.service.impl.PlateServiceImpl;
 import com.yeqian.service.impl.PostServiceImpl;
+import com.yeqian.util.deepseekV3.DeepSeekSummary;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -303,5 +304,23 @@ public class PostServlet extends BaseServlet {
         } else {
             resp.getWriter().write("fail");
         }
+    }
+
+    /**
+     * AI 智能总结 帖子内容
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void summaryPostContent(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("UTF-8");
+        //2.接收数据
+        String content = req.getReader().readLine();
+        //3.调用DeepSeekV3工具类
+        String summaryContent = DeepSeekSummary.appCall(content);
+        //4.响应数据
+        resp.setContentType("text/json;charset=utf-8");
+        resp.getWriter().write(JSON.toJSONString(summaryContent));
     }
 }

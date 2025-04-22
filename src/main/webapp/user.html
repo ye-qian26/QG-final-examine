@@ -187,6 +187,10 @@
                     <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                    <!-- AI智能总结-->
+                    <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
+                    <br>
+                    <div> {{ post.aiSummaryContent }} </div>
                 </el-card>
 
                 <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
@@ -236,6 +240,10 @@
                     <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                    <!-- AI智能总结-->
+                    <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
+                    <br>
+                    <div> {{ post.aiSummaryContent }} </div>
                 </el-card>
             </el-tab-pane>
 
@@ -322,6 +330,10 @@
                     <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                    <!-- AI智能总结-->
+                    <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
+                    <br>
+                    <div> {{ post.aiSummaryContent }} </div>
                 </el-card>
 
                 <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
@@ -371,6 +383,10 @@
                     <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
+                    <!-- AI智能总结 -->
+                    <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
+                    <br>
+                    <div> {{ post.aiSummaryContent }} </div>
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -422,9 +438,11 @@
                     </template>
                     <img :src="post.image" alt="Post Image" class="post-image"/>
                     <div class="post-content">{{ post.content }}</div>
-
                     <el-button type="success" @click="checkReview(post)">打开评论</el-button>
-
+                    <!-- AI智能总结-->
+                    <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
+                    <br>
+                    <div> {{ post.aiSummaryContent }} </div>
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -1000,6 +1018,7 @@
                     plateId: '',
                     userId: '',
                     releaseTime: '',
+                    aiSummaryContent:'',
                     isLiked: false,
                     isFavorited: false,
                     isUserBaned: false,
@@ -1877,7 +1896,7 @@
                 } else this.createPostDialogVisible = true;
             },
             //添加帖子
-            createPost(formName) {
+            async createPost(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         axios({
@@ -1889,7 +1908,7 @@
                                 userId: this.user.id,
                                 plateId: this.activeTab
                             }
-                        }).then(resp => {
+                        }).then(async resp => {
                             if (resp.data === 'success') {
                                 //添加成功
                                 //消息提示
@@ -1902,15 +1921,15 @@
                                 //重新加载数据
                                 if (this.activeIndex === '1') {
                                     //如果是在主页界面
-                                    this.loadingHomePageTab();
+                                    await this.loadingHomePageTab();
                                 } else if (this.activeIndex === '2') {
                                     //如果是在我的板块
-                                    this.postData = this.selectPostByPlateId();
+                                    this.postData = await this.selectPostByPlateId();
                                 }
                             }
                         })
                     } else {
-                        this.$message.warning('内容未填写完');
+                        this.$message.warning('内容未填写完或内容过长');
                         return false;
                     }
                 })
@@ -1957,6 +1976,7 @@
                     await this.deleteReportedPostByPostId(post.id);
                     //删除帖子
                     await this.deletePostById(post.id);
+                    this.postData = await this.selectPostByPlateId();
                 }).catch(() => {
                     this.$message({
                         type: 'info',
@@ -3107,6 +3127,26 @@
                     if (resp.data === 'fail') {
                         this.$message.error('添加聊天记录出错');
                     }
+                })
+            },
+            //AI 智能总结 帖子内容
+            summaryByAI(post){
+                post.aiSummaryContent = 'AI正在解析中...';
+                console.log(post.aiSummaryContent);
+                this.$forceUpdate();
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/postServlet/summaryPostContent',
+                    data:post.content
+                }).then(resp => {
+                    post.aiSummaryContent = '生成成功...';
+                    console.log(post.aiSummaryContent);
+                    this.$forceUpdate();
+                    setTimeout(() => {
+                        post.aiSummaryContent = resp.data;
+                        console.log(post.aiSummaryContent);
+                        this.$forceUpdate();
+                    }, 500);
                 })
             }
         }

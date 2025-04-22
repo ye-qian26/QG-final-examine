@@ -1,6 +1,6 @@
 package com.yeqian.controller.servlet;
 
-import com.yeqian.util.CheckCodeUtils;
+import com.yeqian.util.checkcode.CheckCodeUtils;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;

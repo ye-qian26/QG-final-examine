@@ -1,4 +1,4 @@
-package com.yeqian.util;
+package com.yeqian.util.checkcode;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
