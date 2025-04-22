@@ -9,16 +9,26 @@ public class Review {
     private Integer postId;
     private Integer userId;
     private Integer likes;
+    private Integer reviewId;
 
     public Review() {
     }
 
-    public Review(Integer id, String content, Integer postId, Integer userId, Integer likes) {
+    public Review(Integer id, String content, Integer postId, Integer userId, Integer likes, Integer reviewId) {
         this.id = id;
         this.content = content;
         this.postId = postId;
         this.userId = userId;
         this.likes = likes;
+        this.reviewId = reviewId;
+    }
+
+    public Integer getReviewId() {
+        return reviewId;
+    }
+
+    public void setReviewId(Integer reviewId) {
+        this.reviewId = reviewId;
     }
 
     public Integer getUserId() {
@@ -69,6 +79,7 @@ public class Review {
                 ", postId=" + postId +
                 ", userId=" + userId +
                 ", likes=" + likes +
+                ", reviewId=" + reviewId +
                 '}';
     }
 }

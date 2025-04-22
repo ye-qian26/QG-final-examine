@@ -39,4 +39,21 @@ public interface ReviewService {
      * @param postId
      */
     void deleteByPostId(Integer postId);
+
+    /**
+     * 通过 评论id 查询 其所有跟评
+     * @param reviewId
+     * @return
+     */
+    List<Review> selectByReviewId(Integer reviewId);
+
+    /**
+     * 增加 跟评 评论
+     * @param content
+     * @param userId
+     * @param postId
+     * @param reviewId
+     */
+    void addFollowReview(String content, Integer userId,
+                         Integer postId, Integer reviewId);
 }

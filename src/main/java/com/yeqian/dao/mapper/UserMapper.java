@@ -6,6 +6,8 @@ import com.yeqian.util.mybatis.annotations.Param;
 import com.yeqian.util.mybatis.annotations.Select;
 import com.yeqian.util.mybatis.annotations.Update;
 
+import java.util.List;
+
 public interface UserMapper {
 
     /**
@@ -63,4 +65,12 @@ public interface UserMapper {
      */
     @Select("select * from user where id = #{id}")
     User selectUserById(@Param("id") Integer id);
+
+    /**
+     * 查询 用户 之外的 所有用户
+     * @param id
+     * @return
+     */
+    @Select("select * from user where id != #{id}")
+    List<User> selectAllUserWithoutId(@Param("id") Integer id);
 }

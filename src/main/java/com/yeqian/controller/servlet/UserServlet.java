@@ -11,6 +11,7 @@ import javax.servlet.http.*;
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @WebServlet("/userServlet/*")
 @MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, // 2MB
@@ -211,6 +212,32 @@ public class UserServlet extends BaseServlet {
         } else {
             resp.setContentType("text/json;charset=utf-8");
             resp.getWriter().write(JSON.toJSONString(user));
+        }
+    }
+
+    /**
+     * 查询 除了用户 之外的 所有用户
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectUserWithoutId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _id = req.getParameter("id");
+        //3.转换类型
+        Integer id = JSON.parseObject(_id, Integer.class);
+        //4.执行service方法
+        List<User> users = userService.selectAllUserWithoutId(id);
+        //5.响应数据
+        if (users != null && !users.isEmpty()) {
+            //不为空
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(users));
+        } else {
+            //为空
+            resp.getWriter().write("fail");
         }
     }
 }

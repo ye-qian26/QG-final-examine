@@ -5,6 +5,9 @@ import com.yeqian.pojo.User;
 import com.yeqian.service.UserService;
 import com.yeqian.util.mybatis.proxy.MapperProxyFactory;
 
+import java.util.Collections;
+import java.util.List;
+
 public class UserServiceImpl implements UserService {
     UserMapper userMapper = MapperProxyFactory.getProxy(UserMapper.class);
 
@@ -42,5 +45,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public User selectUserById(Integer id) {
         return userMapper.selectUserById(id);
+    }
+
+    @Override
+    public List<User> selectAllUserWithoutId(Integer id) {
+        return userMapper.selectAllUserWithoutId(id);
     }
 }

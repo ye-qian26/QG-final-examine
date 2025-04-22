@@ -63,6 +63,14 @@
             margin-bottom: 10px;
         }
 
+        .el-dropdown-link {
+            cursor: pointer;
+            color: #409EFF;
+        }
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
+
     </style>
 
 </head>
@@ -628,7 +636,29 @@
         <!-- 评论输入区域 -->
         <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
             <el-form-item prop="reviewContent">
-                <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
+                <el-input type="textarea" v-model="reviewForm.reviewContent" @input="handleReviewInput" placeholder="输入评论内容"></el-input>
+                <!-- 用户列表 -->
+                <el-dropdown
+                        v-if="showUserList"
+                        trigger="click"
+                        :visible.sync="showUserList"
+                >
+                      <span class="el-dropdown-link">
+                        @ 谁<i class="el-icon-arrow-down el-icon--right"></i>
+                      </span>
+                    <el-dropdown-menu>
+                        <el-dropdown-item
+                                v-for="user in userList"
+                                :key="user.id"
+                                @click="selectUser(user)"
+                        >
+                            {{ user.username }}
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                    <template #reference>
+                        <div></div>
+                    </template>
+                </el-dropdown>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="addReview">发表评论</el-button>
@@ -636,6 +666,36 @@
         </el-form>
         <!-- 评论列表 -->
         <div v-for="review in reviewData" :key="review.id" class="review-item">
+            <div>
+                <span>{{ review.username }}</span>：{{ review.content }}
+            </div>
+            <el-button icon="el-icon-thumbs" :class="{ 'is-active': review.isLiked }" @click="toggleReviewLike(review)">
+                {{ review.likes }} 赞
+            </el-button>
+            <el-link type="primary" @click="checkFollowReview(review)">查看所有回复</el-link>
+        </div>
+    </el-dialog>
+
+    <!--评论跟评对话框-->
+    <el-dialog
+            title="评论"
+            :visible.sync="followReviewDialogVisible"
+            :before-close="handleCloseFollowReview"
+            width="40%"
+    >
+        <!-- 原评论 -->
+        <span>{{ review.username }}</span>：{{ review.content }}
+        <!-- 评论输入区域 -->
+        <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
+            <el-form-item prop="reviewContent">
+                <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addFollowReview">发表评论</el-button>
+            </el-form-item>
+        </el-form>
+        <!-- 评论列表 -->
+        <div v-for="review in followReviewData" :key="review.id" class="review-item">
             <div>
                 <span>{{ review.username }}</span>：{{ review.content }}
             </div>
@@ -1040,8 +1100,10 @@
                     postId: '',
                     userId: '',
                     likes: '',
-                    isLiked: false
+                    isLiked: false,
+                    username:''
                 },
+
                 //举报帖子数据
                 reportedPost: {
                     id: '',
@@ -1149,6 +1211,8 @@
                 reviewData: [],
                 //临时评论集合
                 _reviewData: [],
+                //跟评集合
+                followReviewData: [],
                 //帖子详情
                 detailPostData: [],
                 //举报帖子信息集合
@@ -1179,6 +1243,8 @@
                 bannedAccountData: [],
                 //聊天记录集合
                 chatRecordData: [],
+                //用户列表集合
+                userList: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
@@ -1215,6 +1281,10 @@
                 privateChatDialogVisible: false,
                 //查看封禁账号对话框
                 bannedAccountDialogVisible: false,
+                //跟评对话框
+                followReviewDialogVisible: false,
+                //是否展示用户列表（@用户功能）
+                showUserList: false,
                 //聊天输入的消息
                 chatInput: '',
                 //聊天窗口的信息
@@ -1237,6 +1307,8 @@
                 _postId: '',
                 //临时用户id
                 _userId: '',
+                //临时评论id
+                _reviewId:'',
                 //搜索帖子选择框
                 postOptions: [{
                     postValue: '最新发布',
@@ -1364,6 +1436,23 @@
                     this.$message.error('输入内容不得为空');
                 }
             },
+            //处理用户评论内容
+            async handleReviewInput(){
+                const lastChar = this.reviewForm.reviewContent.slice(-1);
+                if (lastChar === '@') {
+                    //用户输入了'@'
+                    await this.selectAllUserWithoutId();
+                    this.showUserList = true;
+                } else {
+                    this.showUserList = false;
+                }
+            },
+            //用户选择了某用户
+            selectUser(user) {
+                console.log('selectUser....')
+                this.reviewForm.reviewContent = this.reviewForm.reviewContent + user.username + ' ';
+                this.showUserList = false;
+            },
             handleSelect(key) {
                 this.activeIndex = key;
             },
@@ -1461,6 +1550,9 @@
             },
             handleCloseBannedAccount() {
                 this.bannedAccountDialogVisible = false;
+            },
+            handleCloseFollowReview(){
+                this.followReviewDialogVisible = false;
             },
             //点击举报帖子信息事件
             infoClick1() {
@@ -1610,6 +1702,13 @@
                 this.selectReviewByPostId(post.id);
                 //增加浏览量
                 this.addPostPageView(post);
+            },
+            //查看评论的所有回复
+            async checkFollowReview(review){
+                this._reviewId = review.id;
+                this.review = review;
+                await this.selectFollowReviewByReviewId(review.id);
+                this.followReviewDialogVisible = true;
             },
             //查看帖子详情
             async checkReportedPost(reportedPost) {
@@ -3148,6 +3247,68 @@
                         this.$forceUpdate();
                     }, 500);
                 })
+            },
+            //根据 评论id 查找 跟评
+            async selectFollowReviewByReviewId(reviewId) {
+                const resp = await axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewByReviewId',
+                    data:reviewId
+                })
+                if (resp.data !== 'fail') {
+                    //有跟评
+                    this._reviewData = resp.data;
+                    //显示作者名字
+                    this.userMap = await this.buildUserMap(this._reviewData);
+                    await this.replaceUserIdWithUsername(this._reviewData);
+                    this.followReviewData = this._reviewData;
+                } else {
+                    //无跟评
+                    this.followReviewData = null;
+                }
+                return this.followReviewData;
+            },
+            //发布 跟评
+            addFollowReview(){
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/reviewServlet/addFollowReview',
+                    params: {content : this.reviewForm.reviewContent, userId : this.user.id,
+                             postId : this._postId, reviewId : this._reviewId}
+                }).then(resp => {
+                    if (resp.data === 'success') {
+                        //添加成功
+                        //消息提示
+                        this.$message.success('发布评论成功');
+                        this.reviewForm.reviewContent = null;
+                        //重新加载数据
+                        this.selectFollowReviewByReviewId(this._reviewId);
+                    } else if (resp.data === 'fail') {
+                        //发布评论为空
+                        this.$message.error('输入内容为空');
+                    }
+                })
+            },
+            //查询 所有用户（除了用户自己）
+            async selectAllUserWithoutId() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserWithoutId',
+                        params: {id: this.user.id}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有用户数据
+                        this.userList = resp.data;
+                    } else {
+                        //无用户数据
+                        //不展示用户列表
+                        this.showUserList = false;
+                    }
+                } catch (e) {
+                    console.log('查询用户列表时报异常', e);
+                    return false;
+                }
             }
         }
     })

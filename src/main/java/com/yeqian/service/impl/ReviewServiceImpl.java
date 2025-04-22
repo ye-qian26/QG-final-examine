@@ -35,4 +35,14 @@ public class ReviewServiceImpl implements ReviewService {
     public void deleteByPostId(Integer postId) {
         reviewMapper.deleteByPostId(postId);
     }
+
+    @Override
+    public List<Review> selectByReviewId(Integer reviewId) {
+        return reviewMapper.selectByReviewId(reviewId);
+    }
+
+    @Override
+    public void addFollowReview(String content, Integer userId, Integer postId, Integer reviewId) {
+        reviewMapper.addFollowReview(content, userId, postId, reviewId);
+    }
 }

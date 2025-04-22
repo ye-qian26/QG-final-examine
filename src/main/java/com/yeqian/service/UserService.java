@@ -6,6 +6,8 @@ import com.yeqian.util.mybatis.annotations.Param;
 import com.yeqian.util.mybatis.annotations.Select;
 import com.yeqian.util.mybatis.annotations.Update;
 
+import java.util.List;
+
 public interface UserService {
     /**
      * 添加用户
@@ -55,5 +57,12 @@ public interface UserService {
      * @return
      */
     User selectUserById(Integer id);
+
+    /**
+     * 查询 用户 之外的 所有用户
+     * @param id
+     * @return
+     */
+    List<User> selectAllUserWithoutId(Integer id);
 
 }

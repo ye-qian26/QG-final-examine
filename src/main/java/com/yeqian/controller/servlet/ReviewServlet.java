@@ -125,4 +125,59 @@ public class ReviewServlet extends BaseServlet {
         //5.响应数据
         resp.getWriter().write("success");
     }
+
+    /**
+     * 查询 评论 跟评
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectReviewByReviewId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer reviewId = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        List<Review> reviews = reviewService.selectByReviewId(reviewId);
+        //5.响应数据
+        if (reviews != null && !reviews.isEmpty()) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(reviews));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 添加 评论 跟评
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void addFollowReview(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _content = req.getParameter("content");
+        if (_content == null || _content.isEmpty()) {
+            //评论内容为空
+            resp.getWriter().write("fail");
+            return;
+        }
+        String _userId = req.getParameter("userId");
+        String _postId = req.getParameter("postId");
+        String _reviewId = req.getParameter("reviewId");
+        //3.转换数据
+        String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        Integer postId = JSON.parseObject(_postId, Integer.class);
+        Integer reviewId = JSON.parseObject(_reviewId, Integer.class);
+        //4.执行service方法
+        reviewService.addFollowReview(content, userId, postId, reviewId);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+
 }
