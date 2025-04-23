@@ -67,6 +67,7 @@
             cursor: pointer;
             color: #409EFF;
         }
+
         .el-icon-arrow-down {
             font-size: 12px;
         }
@@ -198,7 +199,7 @@
                     <!-- AI智能总结-->
                     <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
                     <br>
-                    <div> {{ post.aiSummaryContent }} </div>
+                    <div> {{ post.aiSummaryContent }}</div>
                 </el-card>
 
                 <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
@@ -251,7 +252,7 @@
                     <!-- AI智能总结-->
                     <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
                     <br>
-                    <div> {{ post.aiSummaryContent }} </div>
+                    <div> {{ post.aiSummaryContent }}</div>
                 </el-card>
             </el-tab-pane>
 
@@ -341,7 +342,7 @@
                     <!-- AI智能总结-->
                     <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
                     <br>
-                    <div> {{ post.aiSummaryContent }} </div>
+                    <div> {{ post.aiSummaryContent }}</div>
                 </el-card>
 
                 <el-card class="post-card" v-for="post in unInterestedUserPosts" :key="post.id">
@@ -394,7 +395,7 @@
                     <!-- AI智能总结 -->
                     <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
                     <br>
-                    <div> {{ post.aiSummaryContent }} </div>
+                    <div> {{ post.aiSummaryContent }}</div>
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -450,7 +451,7 @@
                     <!-- AI智能总结-->
                     <el-button type="primary" @click="summaryByAI(post)">AI智能总结</el-button>
                     <br>
-                    <div> {{ post.aiSummaryContent }} </div>
+                    <div> {{ post.aiSummaryContent }}</div>
                 </el-card>
             </el-tab-pane>
         </el-tabs>
@@ -489,6 +490,7 @@
         <el-button type='primary' @click="myFavoritePost">我的收藏</el-button>
         <el-button type='primary' @click="myBanUser">我封禁的用户</el-button>
         <el-button type="info" @click="infoClick1">帖子举报信息通知</el-button>
+        <el-button type="info" @click="whoCallMe">谁@我</el-button>
         <el-button type="success" @click="myHistoricalRecord">帖子足迹</el-button>
         <div v-if="user.role==='2'">
             <!--管理员-->
@@ -636,7 +638,8 @@
         <!-- 评论输入区域 -->
         <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
             <el-form-item prop="reviewContent">
-                <el-input type="textarea" v-model="reviewForm.reviewContent" @input="handleReviewInput" placeholder="输入评论内容"></el-input>
+                <el-input type="textarea" v-model="reviewForm.reviewContent" @input="handleReviewInput"
+                          placeholder="输入评论内容"></el-input>
                 <!-- 用户列表 -->
                 <el-dropdown
                         v-if="showUserList"
@@ -646,11 +649,11 @@
                       <span class="el-dropdown-link">
                         @ 谁<i class="el-icon-arrow-down el-icon--right"></i>
                       </span>
-                    <el-dropdown-menu>
+                    <el-dropdown-menu slot="dropdown">
                         <el-dropdown-item
                                 v-for="user in userList"
                                 :key="user.id"
-                                @click="selectUser(user)"
+                                @click.native="selectUser(user)"
                         >
                             {{ user.username }}
                         </el-dropdown-item>
@@ -688,7 +691,30 @@
         <!-- 评论输入区域 -->
         <el-form ref="commentForm" :model="reviewForm" label-width="0px" :rules="rules">
             <el-form-item prop="reviewContent">
-                <el-input type="textarea" v-model="reviewForm.reviewContent" placeholder="输入评论内容"></el-input>
+                <el-input type="textarea" v-model="reviewForm.reviewContent" @input="handleFollowReviewInput"
+                          placeholder="输入评论内容"></el-input>
+                <!-- 用户列表 -->
+                <el-dropdown
+                        v-if="showUserListFollow"
+                        trigger="click"
+                        :visible.sync="showUserListFollow"
+                >
+                      <span class="el-dropdown-link">
+                        @ 谁<i class="el-icon-arrow-down el-icon--right"></i>
+                      </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item
+                                v-for="user in userList"
+                                :key="user.id"
+                                @click.native="selectUser(user)"
+                        >
+                            {{ user.username }}
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                    <template #reference>
+                        <div></div>
+                    </template>
+                </el-dropdown>
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" @click="addFollowReview">发表评论</el-button>
@@ -1007,7 +1033,54 @@
 
     </el-dialog>
 
+    <!-- 谁@我通知对话框 -->
+    <el-dialog
+            title="谁 @我通知"
+            :visible.sync="callMeDialogVisible"
+            :before-close="handleCloseCallMe"
+            width="50%"
+    >
+        <!--消息展示-->
+        <div v-for="(callMe, index) in callMeData" :key="index">
+            {{ index + 1 }} 、 {{ callMe.username }} @ 了我
+            <el-button type="success" @click="deleteCallMeInfo(callMe.id, index)">删除消息</el-button><br>
+            <el-link type="primary" @click="checkCallMePost(callMe)">查看帖子信息</el-link><br>
+            {{ callMe.username }} :  {{ callMe.content }}<br><br>
+        </div>
+    </el-dialog>
 
+    <!-- 用户@我 帖子详情对话框 -->
+    <el-dialog
+            title="帖子详情"
+            :visible.sync="callMePostDialogVisible"
+            :before-close="handleCloseCallMePost"
+            width="50%"
+    >
+        <el-card class="post-card" v-for="post in callMePostData" :key="post.id">
+            <template #header>
+                <div class="post-header">
+                    <span>{{ post.username }}</span>
+                    <div class="action-buttons">
+                        <!-- 浏览量显示 -->
+                        <span>{{ post.pageView }} 浏览</span>
+                        <!--收藏功能-->
+                        <el-button icon="el-icon-star" :class="{ 'is-active': post.isFavorited }"
+                                   @click="toggleFavorite(post)">
+                            {{ post.isFavorited ? '已收藏' : '收藏' }}
+                        </el-button>
+                        <!--点赞功能-->
+                        <el-button icon="el-icon-thumbs" :class="{ 'is-active': post.isLiked }"
+                                   @click="toggleLike(post)">
+                            {{ post.likes }} 赞
+                        </el-button>
+                    </div>
+                </div>
+            </template>
+            <img :src="post.image" alt="Post Image" class="post-image"/>
+            <div class="post-content">{{ post.content }}</div>
+            <el-button type="primary" @click="checkReview(post)">打开评论</el-button>
+        </el-card>
+    </el-dialog>
 </div>
 
 <script src="js/vue.js"></script>
@@ -1078,7 +1151,7 @@
                     plateId: '',
                     userId: '',
                     releaseTime: '',
-                    aiSummaryContent:'',
+                    aiSummaryContent: '',
                     isLiked: false,
                     isFavorited: false,
                     isUserBaned: false,
@@ -1101,7 +1174,7 @@
                     userId: '',
                     likes: '',
                     isLiked: false,
-                    username:''
+                    username: ''
                 },
 
                 //举报帖子数据
@@ -1154,11 +1227,19 @@
                 },
                 //聊天记录数据
                 chatRecord: {
-                    id:'',
-                    senderId:'',
-                    receiverId:'',
-                    content:'',
-                    sendTime:''
+                    id: '',
+                    senderId: '',
+                    receiverId: '',
+                    content: '',
+                    sendTime: ''
+                },
+                //@用户数据
+                reviewUser: {
+                    id: '',
+                    userId: '',
+                    remindUserId: '',
+                    postId: '',
+                    reviewId: ''
                 },
                 //表单数据
                 form: {
@@ -1243,6 +1324,10 @@
                 bannedAccountData: [],
                 //聊天记录集合
                 chatRecordData: [],
+                //@我信息集合
+                callMeData: [],
+                //@我帖子详情集合
+                callMePostData: [],
                 //用户列表集合
                 userList: [],
                 //导航菜单索引
@@ -1283,8 +1368,14 @@
                 bannedAccountDialogVisible: false,
                 //跟评对话框
                 followReviewDialogVisible: false,
+                //@我通知对话框
+                callMeDialogVisible: false,
+                //@我帖子详情对话框
+                callMePostDialogVisible: false,
                 //是否展示用户列表（@用户功能）
                 showUserList: false,
+                //是否展示跟评中的用户列表
+                showUserListFollow: false,
                 //聊天输入的消息
                 chatInput: '',
                 //聊天窗口的信息
@@ -1299,6 +1390,8 @@
                 userMap: {},
                 //板块id到板块名的映射对象
                 plateMap: {},
+                //评论id到评论内容的映射对象
+                reviewMap: {},
                 //标签导航
                 activeTab: '',
                 //主页标签导航
@@ -1308,7 +1401,7 @@
                 //临时用户id
                 _userId: '',
                 //临时评论id
-                _reviewId:'',
+                _reviewId: '',
                 //搜索帖子选择框
                 postOptions: [{
                     postValue: '最新发布',
@@ -1384,7 +1477,7 @@
         },
         methods: {
             //初始化webSocket连接
-            initialWebSocket(){
+            initialWebSocket() {
                 this.socket = new WebSocket('ws://localhost:8081/ws/chat');
                 //开启连接
                 this.socket.onopen = () => {
@@ -1437,7 +1530,7 @@
                 }
             },
             //处理用户评论内容
-            async handleReviewInput(){
+            async handleReviewInput() {
                 const lastChar = this.reviewForm.reviewContent.slice(-1);
                 if (lastChar === '@') {
                     //用户输入了'@'
@@ -1447,10 +1540,20 @@
                     this.showUserList = false;
                 }
             },
+            //处理用户跟评内容
+            async handleFollowReviewInput() {
+                const lastChar = this.reviewForm.reviewContent.slice(-1);
+                if (lastChar === '@') {
+                    //用户输入了'@'
+                    await this.selectAllUserWithoutId();
+                    this.showUserListFollow = true;
+                } else {
+                    this.showUserListFollow = false;
+                }
+            },
             //用户选择了某用户
             selectUser(user) {
-                console.log('selectUser....')
-                this.reviewForm.reviewContent = this.reviewForm.reviewContent + user.username + ' ';
+                this.reviewForm.reviewContent = this.reviewForm.reviewContent + user.id + ':' + user.username + ' ';
                 this.showUserList = false;
             },
             handleSelect(key) {
@@ -1551,8 +1654,14 @@
             handleCloseBannedAccount() {
                 this.bannedAccountDialogVisible = false;
             },
-            handleCloseFollowReview(){
+            handleCloseFollowReview() {
                 this.followReviewDialogVisible = false;
+            },
+            handleCloseCallMe(){
+                this.callMeDialogVisible = false;
+            },
+            handleCloseCallMePost(){
+                this.callMePostDialogVisible = false;
             },
             //点击举报帖子信息事件
             infoClick1() {
@@ -1605,10 +1714,8 @@
                 this.selectPlateNoticeById();
                 try {
                     await this.addPlatePageView();
-                    //先查询帖子
+                    //查询帖子
                     this.postData = await this.selectPostByPlateId();
-                    //后查询收藏状态
-                    await this.selectFavoritePost(this.postData)
                 } catch (error) {
                     console.error('切换标签页执行过程中出错:', error);
                 }
@@ -1692,6 +1799,17 @@
                 }
                 this.bannedAccountDialogVisible = true;
             },
+            //"谁@我"点击事件
+            async whoCallMe(){
+                await this.selectCallMe();
+                this.callMeDialogVisible = true;
+            },
+            //查看帖子详情（谁@我通知）
+            async checkCallMePost(callMe){
+                this._postId = callMe.postId;
+                await this.selectPostById(this.callMePostData);
+                this.callMePostDialogVisible = true;
+            },
             //打开评论
             checkReview(post) {
                 //将帖子添加至历史记录
@@ -1704,7 +1822,7 @@
                 this.addPostPageView(post);
             },
             //查看评论的所有回复
-            async checkFollowReview(review){
+            async checkFollowReview(review) {
                 this._reviewId = review.id;
                 this.review = review;
                 await this.selectFollowReviewByReviewId(review.id);
@@ -1713,7 +1831,7 @@
             //查看帖子详情
             async checkReportedPost(reportedPost) {
                 this._postId = reportedPost.postId;
-                await this.selectPostById();
+                await this.selectPostById(this.detailPostData);
                 await this.selectBanByUserIdAndPlateId(this.detailPostData[0].userId, this.detailPostData[0].plateId);
                 console.log(this.ban);
                 this.postDetailsDialogVisible = true;
@@ -1970,6 +2088,8 @@
                         //显示作者
                         this.userMap = await this.buildUserMap(this._postData);
                         this.replaceUserIdWithUsername(this._postData);
+                        //查询收藏状态
+                        await this.selectFavoritePost(this._postData);
                         //this.postData = this._postData;
                     } else {
                         //无数据
@@ -2061,7 +2181,7 @@
                 })
             },
             //删除帖子
-            async deletePost(post) {
+            deletePost: async function (post) {
                 this.$confirm('确认删除该帖子吗?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
@@ -2069,6 +2189,12 @@
                 }).then(async () => {
                     //删除对应收藏信息
                     await this.deleteFavoritePostByPostId(post.id);
+                    //删除帖子对应历史记录
+                    await this.deleteHistoricalRecordByPostId(post.id);
+                    //删除对应@用户信息
+                    await this.deleteReviewUserByPostId(post.id);
+                    //删除帖子对应跟评
+                    await this.deleteFollowReviewByPostId(post.id);
                     //删除对应评论信息
                     await this.deleteReviewByPostId(post.id);
                     //删除对应举报帖子信息
@@ -2118,6 +2244,7 @@
                         if (resp.data === 'success') {
                             //修改成功
                             post.likes++;
+                            this.$forceUpdate();
                         }
                     })
                 } else {
@@ -2130,6 +2257,7 @@
                         if (resp.data === 'success') {
                             //修改成功
                             post.likes--;
+                            this.$forceUpdate();
                         }
                     })
                 }
@@ -2171,6 +2299,9 @@
                     params: {content: this.reviewForm.reviewContent, userId: this.user.id, postId: this._postId}
                 }).then(resp => {
                     if (resp.data === 'success') {
+                        const content = this.reviewForm.reviewContent;
+                        //查询这条评论获取其id,并解析评论内容
+                        this.selectReview(content);
                         //发布评论成功
                         //消息提示
                         this.$message.success('发表评论成功！');
@@ -2357,7 +2488,7 @@
                 })
             },
             //通过帖子id查询帖子
-            async selectPostById() {
+            async selectPostById(postData) {
                 try {
                     const resp = await axios({
                         method: 'get',
@@ -2366,11 +2497,15 @@
                     })
                     if (resp.data !== 'fail') {
                         //有数据
-                        this.detailPostData[0] = resp.data;
+                        postData[0] = resp.data;
                         //渲染用户名
-                        this.userMap = await this.buildUserMap(this.detailPostData);
+                        this.userMap = await this.buildUserMap(postData);
                         // 替换userId为用户名
-                        this.replaceUserIdWithUsername(this.detailPostData);
+                        this.replaceUserIdWithUsername(postData);
+                        //后查询收藏状态
+                        await this.selectFavoritePost(postData);
+                    } else {
+                        postData = null;
                     }
                 } catch (error) {
                     console.error('获取帖子详情出错:', error);
@@ -2455,7 +2590,6 @@
                                         this.$message.success('封禁成功');
                                         //重新加载帖子详情
                                         post.isUserBaned = !post.isUserBaned;
-                                        this.selectPostById();
                                         this.$forceUpdate();
                                     }
                                 })
@@ -2482,7 +2616,6 @@
                         this.$message.success('解除封禁成功！');
                         //重新加载帖子详情
                         post.isUserBaned = !post.isUserBaned;
-                        this.selectPostById();
                         this.$forceUpdate();
                     }
                 })
@@ -2560,7 +2693,6 @@
             },
             //搜索帖子
             async searchPost() {
-
                 try {
                     //根据条件查询
                     await this.selectPostByContentAndPlateId();
@@ -3196,15 +3328,15 @@
                 }
             },
             //发送者id 到 发送者昵称 的映射
-            async buildSenderMap(chatMessages, chatRecordData){
+            async buildSenderMap(chatMessages, chatRecordData) {
                 if (chatRecordData === null) {
                     return;
                 }
                 chatRecordData.forEach(chatRecord => {
                     axios({
-                        method:'get',
-                        url:'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
-                        params: {id : chatRecord.senderId}
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserById',
+                        params: {id: chatRecord.senderId}
                     }).then(resp => {
                         if (resp.data !== 'fail') {
                             //有数据
@@ -3219,9 +3351,9 @@
                 this.chatRecord.senderId = this.user.id;
                 this.chatRecord.receiverId = this._userId;
                 axios({
-                    method:'post',
-                    url:'http://localhost:8080/Technical-Forum/chatRecordServlet/addChatRecord',
-                    data:this.chatRecord
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/chatRecordServlet/addChatRecord',
+                    data: this.chatRecord
                 }).then(resp => {
                     if (resp.data === 'fail') {
                         this.$message.error('添加聊天记录出错');
@@ -3229,14 +3361,14 @@
                 })
             },
             //AI 智能总结 帖子内容
-            summaryByAI(post){
+            summaryByAI(post) {
                 post.aiSummaryContent = 'AI正在解析中...';
                 console.log(post.aiSummaryContent);
                 this.$forceUpdate();
                 axios({
-                    method:'post',
-                    url:'http://localhost:8080/Technical-Forum/postServlet/summaryPostContent',
-                    data:post.content
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/postServlet/summaryPostContent',
+                    data: post.content
                 }).then(resp => {
                     post.aiSummaryContent = '生成成功...';
                     console.log(post.aiSummaryContent);
@@ -3251,9 +3383,9 @@
             //根据 评论id 查找 跟评
             async selectFollowReviewByReviewId(reviewId) {
                 const resp = await axios({
-                    method:'post',
-                    url:'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewByReviewId',
-                    data:reviewId
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewByReviewId',
+                    data: reviewId
                 })
                 if (resp.data !== 'fail') {
                     //有跟评
@@ -3269,15 +3401,20 @@
                 return this.followReviewData;
             },
             //发布 跟评
-            addFollowReview(){
+            addFollowReview() {
                 axios({
-                    method:'get',
-                    url:'http://localhost:8080/Technical-Forum/reviewServlet/addFollowReview',
-                    params: {content : this.reviewForm.reviewContent, userId : this.user.id,
-                             postId : this._postId, reviewId : this._reviewId}
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/addFollowReview',
+                    params: {
+                        content: this.reviewForm.reviewContent, userId: this.user.id,
+                        postId: this._postId, reviewId: this._reviewId
+                    }
                 }).then(resp => {
                     if (resp.data === 'success') {
                         //添加成功
+                        const content = this.reviewForm.reviewContent;
+                        //查询该评论得到其id
+                        this.selectFollowReview(content);
                         //消息提示
                         this.$message.success('发布评论成功');
                         this.reviewForm.reviewContent = null;
@@ -3308,6 +3445,199 @@
                 } catch (e) {
                     console.log('查询用户列表时报异常', e);
                     return false;
+                }
+            },
+            //查询 评论 获取 其id，并解析评论内容
+            async selectReview(content) {
+                const resp = await axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectNewReview',
+                    params: {content: content, userId: this.user.id, postId: this._postId}
+                })
+                if (resp.data !== 'fail') {
+                    //解析评论内容，发送@用户信息
+                    await this.parseReviewContent(content, resp.data.id);
+                }
+            },
+            //解析评论内容，发送@用户信息
+            async parseReviewContent(content, reviewId) {
+                const parts = content.split(' ');
+                for (let part of parts) {
+                    if (part.startsWith('@')) {
+                        const startIndex = part.indexOf('@') + 1;
+                        const lastIndex = part.indexOf(':');
+                        const userId = part.slice(startIndex, lastIndex);
+                        const username = part.slice(lastIndex + 1);
+                        //判断是否有该用户
+                        const resp = await axios({
+                            method: 'get',
+                            url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserByUsernameAndId',
+                            params: {username: username, id: userId}
+                        })
+                        if (resp.data !== 'fail') {
+                            //有该用户
+                            this.reviewUser.userId = this.user.id;
+                            this.reviewUser.remindUserId = userId;
+                            this.reviewUser.postId = this._postId;
+                            this.reviewUser.reviewId = reviewId;
+                            //在@用户表删除信息（防止同一条评论多次@同一用户）
+                            await this.deleteReviewUser(this.reviewUser);
+                            //添加进@用户表
+                            await this.addReviewUser(this.reviewUser);
+                        }
+                    }
+                }
+            },
+            //添加 @用户 信息
+            async addReviewUser(reviewUser) {
+                const resp = await axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/reviewUserServlet/addReviewUser',
+                    data: reviewUser
+                })
+                if (resp.data === 'success') {
+                    //添加成功
+                } else {
+                    //添加失败
+                    this.$message.error('添加@用户信息时出错');
+                }
+            },
+            //删除 @用户 信息
+            async deleteReviewUser(reviewUser) {
+                const resp = await axios({
+                    method: 'post',
+                    url: 'http://localhost:8080/Technical-Forum/reviewUserServlet/deleteReviewUser',
+                    data: reviewUser
+                })
+                if (resp.data === 'success') {
+                    //删除成功
+                } else {
+                    //删除失败
+                    this.$message.error('删除@用户信息时出错');
+                }
+            },
+            //查询 跟评 获取 其id，并解析评论内容
+            async selectFollowReview(content) {
+                const resp = await axios({
+                    method: 'get',
+                    url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectNewFollowReview',
+                    params: {content: content, userId: this.user.id, postId: this._postId, reviewId: this._reviewId}
+                })
+                if (resp.data !== 'fail') {
+                    //解析评论内容，发送@用户信息
+                    await this.parseReviewContent(content, resp.data.id);
+                }
+            },
+            //根据 用户id 查询 @用户表
+            async selectCallMe() {
+                const resp = await axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/reviewUserServlet/selectReviewUserByUserId',
+                    params: {remindUserId : this.user.id}
+                })
+                if (resp.data !== 'fail') {
+                    //有@用户数据
+                    this.callMeData = resp.data;
+                    //显示用户昵称
+                    this.userMap = await this.buildUserMap(this.callMeData);
+                    await this.replaceUserIdWithUsername(this.callMeData);
+                    //显示评论内容
+                    this.reviewMap = await this.buildReviewMap(this.callMeData);
+                    this.replaceReviewIdWithReviewContent(this.callMeData);
+                } else {
+                    this.callMeData = null;
+                }
+            },
+            //评论 到 评论内容的映射
+            async buildReviewMap(callMeData) {
+                if (callMeData === null) {
+                    return;
+                }
+                const reviewMap = {};
+                for (const callMe of callMeData) {
+                    try {
+                        const resp = await axios({
+                            //发送ajax请求
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/reviewServlet/selectReviewById',
+                            data: callMe.reviewId
+                        });
+                        if (resp.data !== 'fail') {
+                            reviewMap[callMe.reviewId] = resp.data.content;
+                        }
+                    } catch (error) {
+                        console.error('获取评论内容时出错', error);
+                    }
+                }
+                return reviewMap;
+            },
+            //替换 reviewId 为 评论内容
+            replaceReviewIdWithReviewContent(callMeData) {
+                callMeData.forEach(callMe => {
+                    callMe.content = this.reviewMap[callMe.reviewId] || '未知内容';
+                })
+            },
+            //根据 id 删除 @用户信息
+            deleteCallMeInfo(reviewUserId, index) {
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/reviewUserServlet/deleteReviewUserById',
+                    data:reviewUserId
+                }).then(resp => {
+                    if (resp.data === 'success') {
+                        //删除成功
+                        this.$message.success('删除消息成功');
+                        //重新加载数据
+                        this.callMeData.splice(index, 1);
+                    }
+                })
+            },
+            //根据 帖子id 删除 帖子历史记录
+            async deleteHistoricalRecordByPostId(postId){
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/historicalRecordServlet/deleteHistoricalRecordByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        //删除失败
+                        this.$message.error('删除帖子历史记录时出错');
+                    }
+                } catch (e) {
+                    console.log('删除帖子历史记录时报异常');
+                }
+            },
+            //根据 帖子id 删除 对应跟评
+            async deleteFollowReviewByPostId(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reviewServlet/deleteFollowReviewByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        //删除失败
+                        this.$message.error('删除帖子对应跟评时出错');
+                    }
+                } catch (e) {
+                    console.log('删除帖子对应跟评时报异常');
+                }
+            },
+            //根据 帖子id 删除 @用户信息
+            async deleteReviewUserByPostId(postId) {
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/reviewUserServlet/deleteReviewUserByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        //删除失败
+                        this.$message.error('删除帖子对应@用户信息时出错');
+                    }
+                } catch (e) {
+                    console.log('删除帖子对应@用户信息时报异常');
                 }
             }
         }

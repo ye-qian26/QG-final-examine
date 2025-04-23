@@ -73,4 +73,13 @@ public interface UserMapper {
      */
     @Select("select * from user where id != #{id}")
     List<User> selectAllUserWithoutId(@Param("id") Integer id);
+
+    /**
+     * 根据 id 和 用户名 查询用户
+     * @param username
+     * @param id
+     * @return
+     */
+    @Select("select * from user where username = #{username} and id = #{id}")
+    User selectUserByUsernameAndId(@Param("username") String username,@Param("id") Integer id);
 }

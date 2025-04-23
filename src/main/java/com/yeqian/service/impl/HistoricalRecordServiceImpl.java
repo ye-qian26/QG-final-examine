@@ -26,4 +26,9 @@ public class HistoricalRecordServiceImpl implements HistoricalRecordService {
     public List<Post> selectHistoricalRecordsByUserId(Integer userId) {
         return historicalRecordMapper.selectHistoricalRecordsByUserId(userId);
     }
+
+    @Override
+    public void deleteByPostId(Integer postId) {
+        historicalRecordMapper.deleteByPostId(postId);
+    }
 }

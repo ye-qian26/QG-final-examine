@@ -29,4 +29,10 @@ public interface HistoricalRecordService {
      * @return
      */
     List<Post> selectHistoricalRecordsByUserId(Integer userId);
+
+    /**
+     * 根据 帖子id 删除 历史记录
+     * @param postId
+     */
+    void deleteByPostId(Integer postId);
 }

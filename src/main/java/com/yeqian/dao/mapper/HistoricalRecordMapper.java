@@ -36,4 +36,12 @@ public interface HistoricalRecordMapper {
             "where u.id = #{userId} " +
             "order by hr.id desc")
     List<Post> selectHistoricalRecordsByUserId(@Param("userId") Integer userId);
+
+
+    /**
+     * 根据 帖子id 删除 历史记录
+     * @param postId
+     */
+    @Delete("delete from historical_record where post_id = #{postId}")
+    void deleteByPostId(@Param("postId") Integer postId);
 }

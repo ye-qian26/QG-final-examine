@@ -82,4 +82,23 @@ public class HistoricalRecordServlet extends BaseServlet {
         }
     }
 
+    /**
+     * 根据 帖子id 删除 历史记录
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void deleteHistoricalRecordByPostId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        historicalRecordService.deleteByPostId(postId);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+
 }

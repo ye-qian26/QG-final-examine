@@ -45,4 +45,26 @@ public class ReviewServiceImpl implements ReviewService {
     public void addFollowReview(String content, Integer userId, Integer postId, Integer reviewId) {
         reviewMapper.addFollowReview(content, userId, postId, reviewId);
     }
+
+    @Override
+    public Review selectReview(String content, Integer userId, Integer postId) {
+        return reviewMapper.selectReview(content, userId, postId);
+    }
+
+    @Override
+    public Review selectFollowReview(String content, Integer userId, Integer postId, Integer reviewId) {
+        return reviewMapper.selectFollowReview(content, userId, postId, reviewId);
+    }
+
+    @Override
+    public Review selectById(Integer id) {
+        return reviewMapper.selectById(id);
+    }
+
+    @Override
+    public void deleteFollowReviewByPostId(Integer postId) {
+        reviewMapper.deleteFollowReviewByPostId(postId);
+    }
+
+
 }

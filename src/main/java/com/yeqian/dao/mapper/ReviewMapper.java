@@ -42,7 +42,7 @@ public interface ReviewMapper {
      * 根据 帖子id 删除 评论
      * @param postId
      */
-    @Delete("delete from review where post_id = #{postId}")
+    @Delete("delete from review where post_id = #{postId} and review_id is null")
     void deleteByPostId(@Param("postId") Integer postId);
 
     /**
@@ -63,4 +63,42 @@ public interface ReviewMapper {
     @Insert("insert into review (content, user_id, post_id, review_id) values (#{content}, #{userId}, #{postId}, #{reviewId})")
     void addFollowReview(@Param("content") String content, @Param("userId") Integer userId,
                          @Param("postId") Integer postId, @Param("reviewId") Integer reviewId);
+
+    /**
+     * 查找评论（@用户功能）
+     * @param content
+     * @param userId
+     * @param postId
+     */
+    @Select("select * from review where content = #{content} and user_id = #{userId} " +
+            "and post_id = #{postId} and review_id is null order by id desc limit 1")
+    Review selectReview(@Param("content") String content, @Param("userId") Integer userId, @Param("postId") Integer postId);
+
+    /**
+     * 查找跟评（@用户功能）
+     * @param content
+     * @param userId
+     * @param postId
+     */
+    @Select("select * from review where content = #{content} and user_id = #{userId} " +
+            "and post_id = #{postId} and review_id = #{reviewId} order by id desc limit 1")
+    Review selectFollowReview(@Param("content") String content, @Param("userId") Integer userId,
+                              @Param("postId") Integer postId, @Param("reviewId") Integer reviewId);
+
+
+    /**
+     * 通过 id 查询 评论
+     * @param id
+     * @return
+     */
+    @Select("select * from review where id = #{id}")
+    Review selectById(@Param("id") Integer id);
+
+
+    /**
+     * 根据 帖子id 删除 跟评
+     * @param postId
+     */
+    @Delete("delete from review where post_id = #{postId} and review_id is not null")
+    void deleteFollowReviewByPostId(@Param("postId") Integer postId);
 }

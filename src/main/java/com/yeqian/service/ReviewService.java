@@ -56,4 +56,33 @@ public interface ReviewService {
      */
     void addFollowReview(String content, Integer userId,
                          Integer postId, Integer reviewId);
+
+    /**
+     * 查找评论（@用户功能）
+     * @param content
+     * @param userId
+     * @param postId
+     */
+    Review selectReview(String content, Integer userId, Integer postId);
+
+    /**
+     * 查找跟评（@用户功能）
+     * @param content
+     * @param userId
+     * @param postId
+     */
+    Review selectFollowReview(String content, Integer userId, Integer postId, Integer reviewId);
+
+    /**
+     * 通过 id 查询 评论
+     * @param id
+     * @return
+     */
+    Review selectById(Integer id);
+
+    /**
+     * 根据 帖子id 删除 跟评
+     * @param postId
+     */
+    void deleteFollowReviewByPostId(Integer postId);
 }

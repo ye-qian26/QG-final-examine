@@ -51,4 +51,9 @@ public class UserServiceImpl implements UserService {
     public List<User> selectAllUserWithoutId(Integer id) {
         return userMapper.selectAllUserWithoutId(id);
     }
+
+    @Override
+    public User selectUserByUsernameAndId(String username, Integer id) {
+        return userMapper.selectUserByUsernameAndId(username, id);
+    }
 }

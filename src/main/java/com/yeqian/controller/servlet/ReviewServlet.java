@@ -180,4 +180,105 @@ public class ReviewServlet extends BaseServlet {
         resp.getWriter().write("success");
     }
 
+    /**
+     * 查询 符合条件 的 最新一条评论
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectNewReview(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _content = req.getParameter("content");
+        String _userId = req.getParameter("userId");
+        String _postId = req.getParameter("postId");
+        //3.转换数据
+        String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        Integer postId = JSON.parseObject(_postId, Integer.class);
+        //4.执行service方法
+        Review review = reviewService.selectReview(content, userId, postId);
+        //5.响应数据
+        if (review != null) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(review));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 查询 符合条件 的 最新一条 跟评
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectNewFollowReview(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _content = req.getParameter("content");
+        String _userId = req.getParameter("userId");
+        String _postId = req.getParameter("postId");
+        String _reviewId = req.getParameter("reviewId");
+        //3.转换数据
+        String content = new String(_content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+        Integer userId = JSON.parseObject(_userId, Integer.class);
+        Integer postId = JSON.parseObject(_postId, Integer.class);
+        Integer reviewId = JSON.parseObject(_reviewId, Integer.class);
+        //4.执行service方法
+        Review review = reviewService.selectFollowReview(content, userId, postId, reviewId);
+        //5.响应数据
+        if (review != null) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(review));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 根据 id 查询 评论
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void selectReviewById(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer id = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        Review review = reviewService.selectById(id);
+        //5.响应数据
+        if (review != null) {
+            resp.setContentType("text/json;charset=utf-8");
+            resp.getWriter().write(JSON.toJSONString(review));
+        } else {
+            resp.getWriter().write("fail");
+        }
+    }
+
+    /**
+     * 根据 帖子id 删除 跟评
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void deleteFollowReviewByPostId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.解决乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        Integer postId = JSON.parseObject(jsonString, Integer.class);
+        //4.执行service方法
+        reviewService.deleteFollowReviewByPostId(postId);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
+
 }

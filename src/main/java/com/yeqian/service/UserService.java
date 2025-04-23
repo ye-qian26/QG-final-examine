@@ -65,4 +65,15 @@ public interface UserService {
      */
     List<User> selectAllUserWithoutId(Integer id);
 
+    /**
+     * 根据 id 和 用户名 查询用户
+     * @param username
+     * @param id
+     * @return
+     */
+    User selectUserByUsernameAndId(String username, Integer id);
+
+
 }
+
+
