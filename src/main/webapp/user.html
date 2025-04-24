@@ -484,16 +484,23 @@
                 <el-button type='primary' @click="updateUsername('nameForm')">保存</el-button>
             </el-form-item>
         </el-form>
+        <!-- 设置密码 -->
         <el-button type='primary' @click="updateDialogVisible=true">设置密码</el-button>
-
-        <!--帖子举报信息通知-->
+        <!-- 查看我的收藏 -->
         <el-button type='primary' @click="myFavoritePost">我的收藏</el-button>
+        <!-- 查看我所封禁的用户 -->
         <el-button type='primary' @click="myBanUser">我封禁的用户</el-button>
+        <br>
+        <!-- 帖子举报信息通知 -->
         <el-button type="info" @click="infoClick1">帖子举报信息通知</el-button>
+        <!-- 查看有谁@我 -->
         <el-button type="info" @click="whoCallMe">谁@我</el-button>
+        <!-- 帖子点赞信息 -->
+        <el-button type="success" @click="myPostByLiked">帖子点赞信息</el-button>
+        <!-- 查看帖子历史记录 -->
         <el-button type="success" @click="myHistoricalRecord">帖子足迹</el-button>
         <div v-if="user.role==='2'">
-            <!--管理员-->
+            <!-- 管理员 -->
             <el-button type="info" @click="infoClick2">用户申请信息</el-button>
             <el-button type="info" @click="reportedUserinfoClick">用户举报信息通知</el-button>
             <el-button type="danger" @click="checkBannedAccount">已封禁的账号</el-button>
@@ -1035,7 +1042,7 @@
 
     <!-- 谁@我通知对话框 -->
     <el-dialog
-            title="谁 @我通知"
+            title="谁 @我"
             :visible.sync="callMeDialogVisible"
             :before-close="handleCloseCallMe"
             width="50%"
@@ -1044,7 +1051,7 @@
         <div v-for="(callMe, index) in callMeData" :key="index">
             {{ index + 1 }} 、 {{ callMe.username }} @ 了我
             <el-button type="success" @click="deleteCallMeInfo(callMe.id, index)">删除消息</el-button><br>
-            <el-link type="primary" @click="checkCallMePost(callMe)">查看帖子信息</el-link><br>
+            <el-link type="primary" @click="checkPostInfo(callMe)">查看帖子信息</el-link><br>
             {{ callMe.username }} :  {{ callMe.content }}<br><br>
         </div>
     </el-dialog>
@@ -1052,11 +1059,11 @@
     <!-- 用户@我 帖子详情对话框 -->
     <el-dialog
             title="帖子详情"
-            :visible.sync="callMePostDialogVisible"
-            :before-close="handleCloseCallMePost"
+            :visible.sync="postInfoDialogVisible"
+            :before-close="handleClosePostInfo"
             width="50%"
     >
-        <el-card class="post-card" v-for="post in callMePostData" :key="post.id">
+        <el-card class="post-card" v-for="post in postInfoData" :key="post.id">
             <template #header>
                 <div class="post-header">
                     <span>{{ post.username }}</span>
@@ -1080,6 +1087,22 @@
             <div class="post-content">{{ post.content }}</div>
             <el-button type="primary" @click="checkReview(post)">打开评论</el-button>
         </el-card>
+    </el-dialog>
+
+    <!-- 帖子点赞信息对话框 -->
+    <el-dialog
+            title="帖子点赞信息"
+            :visible.sync="postLikesDialogVisible"
+            :before-close="handleClosePostlikes"
+            width="50%"
+    >
+        <!--消息展示-->
+        <div v-for="(postLikes, index) in postLikesData" :key="index">
+            {{ index + 1 }} 、 @{{ postLikes.username }} 点赞了我的帖子
+            <el-button type="success" @click="deletePostLikes(postLikes.id, index)">删除消息</el-button><br>
+            <el-link type="primary" @click="checkPostInfo(postLikes)">查看帖子信息</el-link><br>
+            <br><br>
+        </div>
     </el-dialog>
 </div>
 
@@ -1241,6 +1264,13 @@
                     postId: '',
                     reviewId: ''
                 },
+                //帖子点赞数据
+                postLikes: {
+                    id:'',
+                    userId:'',
+                    likesUserId:'',
+                    postId:''
+                },
                 //表单数据
                 form: {
                     name: localStorage.getItem('username'),
@@ -1327,9 +1357,11 @@
                 //@我信息集合
                 callMeData: [],
                 //@我帖子详情集合
-                callMePostData: [],
+                postInfoData: [],
                 //用户列表集合
                 userList: [],
+                //帖子点赞信息集合
+                postLikesData: [],
                 //导航菜单索引
                 activeIndex: '1',
                 //头像url路径
@@ -1370,8 +1402,10 @@
                 followReviewDialogVisible: false,
                 //@我通知对话框
                 callMeDialogVisible: false,
-                //@我帖子详情对话框
-                callMePostDialogVisible: false,
+                //帖子点赞信息对话框
+                postLikesDialogVisible: false,
+                //帖子信息对话框（@我对话框和帖子点赞对话框）
+                postInfoDialogVisible: false,
                 //是否展示用户列表（@用户功能）
                 showUserList: false,
                 //是否展示跟评中的用户列表
@@ -1660,8 +1694,11 @@
             handleCloseCallMe(){
                 this.callMeDialogVisible = false;
             },
-            handleCloseCallMePost(){
-                this.callMePostDialogVisible = false;
+            handleClosePostInfo(){
+                this.postInfoDialogVisible = false;
+            },
+            handleClosePostLikes(){
+                this.postLikesDialogVisible = false;
             },
             //点击举报帖子信息事件
             infoClick1() {
@@ -1804,11 +1841,16 @@
                 await this.selectCallMe();
                 this.callMeDialogVisible = true;
             },
+            //"帖子点赞信息"点击事件
+            async myPostByLiked(){
+                await this.selectPostLikesByUserId();
+                this.postLikesDialogVisible = true;
+            },
             //查看帖子详情（谁@我通知）
-            async checkCallMePost(callMe){
-                this._postId = callMe.postId;
-                await this.selectPostById(this.callMePostData);
-                this.callMePostDialogVisible = true;
+            async checkPostInfo(info){
+                this._postId = info.postId;
+                await this.selectPostById(this.postInfoData);
+                this.postInfoDialogVisible = true;
             },
             //打开评论
             checkReview(post) {
@@ -2234,6 +2276,9 @@
             // 切换点赞状态
             toggleLike(post) {
                 post.isLiked = !post.isLiked;
+                this.postLikes.userId = this.user.id;
+                this.postLikes.likesUserId = post.userId;
+                this.postLikes.postId = post.id;
                 if (post.isLiked) {
                     //执行增加点赞量的方法
                     axios({
@@ -2247,6 +2292,18 @@
                             this.$forceUpdate();
                         }
                     })
+                    //添加 点赞表
+                    if (post.userId != this.user.id){
+                        axios({
+                            method:'post',
+                            url:'http://localhost:8080/Technical-Forum/postLikesServlet/addPostLikes',
+                            data:this.postLikes
+                        }).then(resp => {
+                            if (resp.data !== 'success') {
+                                this.$message.error('增加帖子的点赞信息表时出错');
+                            }
+                        })
+                    }
                 } else {
                     //执行增加点赞量的方法
                     axios({
@@ -2260,6 +2317,18 @@
                             this.$forceUpdate();
                         }
                     })
+                    if (post.userId != this.user.id) {
+                        //删除 点赞表
+                        axios({
+                            method:'post',
+                            url:'http://localhost:8080/Technical-Forum/postLikesServlet/deletePostLikes',
+                            data:this.postLikes
+                        }).then(resp => {
+                            if (resp.data !== 'success') {
+                                this.$message.error('删除帖子的点赞信息表时出错');
+                            }
+                        })
+                    }
                 }
             },
             //切换评论点赞状态
@@ -3639,6 +3708,38 @@
                 } catch (e) {
                     console.log('删除帖子对应@用户信息时报异常');
                 }
+            },
+            //根据 用户id 查询 帖子点赞信息
+            async selectPostLikesByUserId(){
+                const resp = await axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/postLikesServlet/selectPostLikesByUserId',
+                    params: {likesUserId : this.user.id}
+                })
+                if (resp.data !== 'fail') {
+                    //有帖子点赞信息
+                    this.postLikesData = resp.data;
+                    //显示用户昵称
+                    this.userMap = await this.buildUserMap(this.postLikesData);
+                    this.replaceUserIdWithUsername(this.postLikesData);
+                }
+            },
+            //根据 id 删除 帖子点赞信息
+            deletePostLikes(postLikesId, index) {
+                axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/postLikesServlet/deletePostLikesById',
+                    data:postLikesId
+                }).then(resp => {
+                    if (resp.data === 'success') {
+                        //删除成功
+                        this.postLikesData.splice(index, 1);
+                        //消息提示
+                        this.$message.success('删除成功');
+                    } else {
+                        this.$message.error('删除失败，请稍后重试');
+                    }
+                })
             }
         }
     })
