@@ -63,11 +63,18 @@
 <script src="js/vue.js"></script>
 <script src="element-ui/lib/index.js"></script>
 <script src="js/axios-0.18.0.js"></script>
+<script src="js/jsencrypt.js"></script>
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
     new Vue({
         el: '#register',
+        mounted(){
+            //初始化 jsencrypt 实例
+            this.registerEncrypt = new JSEncrypt();
+            // 获取公钥
+            this.registerFetchPublicKey();
+        },
         data(){
             //制定密码规则
             var validatePass = (rule, value, callback) => {
@@ -90,6 +97,10 @@
                 }
             };
             return{
+                //密钥
+                registerEncrypt: null,
+                //公钥
+                registerPublicKey: null,
                 //表单数据：
                 form:{
                     name:'',
@@ -159,6 +170,8 @@
                                 this.user.username = this.form.name;
                                 this.user.tele = this.form.tele;
                                 this.user.password = this.form.password;
+                                //公钥加密 密码
+                                this.user.password = this.registerEncrypt.encrypt(this.user.password);
                                 //发送ajax请求判断手机号是否存在
                                 axios({
                                     method:'post',
@@ -199,84 +212,6 @@
                                     }
                                 })
 
-                                // //输入正确
-                                // if (this.form.select === '用户') {
-                                //     //如果是用户
-                                //     this.user.username = this.form.name;
-                                //     this.user.tele = this.form.tele;
-                                //     this.user.password = this.form.password;
-                                //     //发送ajax请求判断手机号是否存在
-                                //     axios({
-                                //         method:'post',
-                                //         url:'http://localhost:8080/Technical-Forum/userServlet/selectUserByTele',
-                                //         data:this.user.tele
-                                //     }).then(resp => {
-                                //         if (resp.data === 'success'){
-                                //             //可以注册
-                                //             //发送ajax请求
-                                //             axios({
-                                //                 method:"post",
-                                //                 url:'http://localhost:8080/Technical-Forum/userServlet/registerUser',
-                                //                 data:this.user
-                                //             }).then(resp => {
-                                //                 if (resp.data === 'success'){
-                                //                     //登录成功
-                                //                     //消息提示
-                                //                     this.$message({
-                                //                         type: "success",
-                                //                         message: "用户注册成功！可前往登录~"
-                                //                     })
-                                //                 }
-                                //             })
-                                //         } else {
-                                //             //不可以注册
-                                //             //消息提示
-                                //             this.$message({
-                                //                 type:'warning',
-                                //                 message:'该手机号已存在'
-                                //             })
-                                //         }
-                                //     })
-                                //
-                                //
-                                // } else {
-                                //     //如果是管理员
-                                //     this.administrator.name = this.form.name;
-                                //     this.administrator.tele = this.form.tele;
-                                //     this.administrator.password = this.form.password;
-                                //     //发送ajax请求判断手机号是否存在
-                                //     axios({
-                                //         method:'post',
-                                //         url:'http://localhost:8080/Technical-Forum/administratorServlet/selectAdministratorByTele',
-                                //         data:this.administrator.tele
-                                //     }).then(resp => {
-                                //         if (resp.data === 'success'){
-                                //             //手机号不存在，可以注册
-                                //             //发送ajax请求
-                                //             axios({
-                                //                 method:"post",
-                                //                 url:'http://localhost:8080/Technical-Forum/administratorServlet/registerAdministrator',
-                                //                 data:this.administrator
-                                //             }).then(resp => {
-                                //                 if (resp.data === 'success'){
-                                //                     //登录成功
-                                //                     //消息提示
-                                //                     this.$message({
-                                //                         type: "success",
-                                //                         message: "管理员注册成功！可前往登录~"
-                                //                     })
-                                //                 }
-                                //             })
-                                //         } else {
-                                //             //手机号存在，不可以注册
-                                //             this.$message({
-                                //                 type:'warning',
-                                //                 message:'该手机号已存在'
-                                //             })
-                                //         }
-                                //     })
-                                //
-                                // }
                             } else if (resp.data === "fail") {
                                 //输入错误
                                 this.$message.error("验证码错误");
@@ -297,6 +232,20 @@
             //重置信息
             resetRegisterForm(formName) {
                 this.$refs[formName].resetFields();
+            },
+            //获取 公钥
+            registerFetchPublicKey() {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/keyGeneratorServlet/getPublicKey'
+                }).then(resp => {
+                    this.registerPublicKey = resp.data;
+                    //console.log(this.publicKey);
+                    this.registerEncrypt.setPublicKey(this.registerPublicKey);
+                }).catch(error => {
+                    console.error('获取注册公钥失败', error);
+                    this.$message.error('获取注册公钥失败');
+                });
             }
         }
     })

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.yeqian.pojo.User;
 import com.yeqian.service.UserService;
 import com.yeqian.service.impl.UserServiceImpl;
+import com.yeqian.util.FileReader.KeyFileReader;
 
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -11,6 +12,7 @@ import javax.servlet.http.*;
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
 import java.util.List;
 
 @WebServlet("/userServlet/*")
@@ -35,6 +37,11 @@ public class UserServlet extends BaseServlet {
         String jsonString = req.getReader().readLine();
         //3.转为User类
         User user = JSON.parseObject(jsonString, User.class);
+        String encryptPassword = user.getPassword();
+        System.out.println(encryptPassword);
+        //4.解密 密码
+        String password = KeyFileReader.readPrivateKeyFromFile(encryptPassword);
+        System.out.println(password);
         //4.执行service方法
         userService.insertUser(user);
         //5.响应数据
@@ -75,9 +82,11 @@ public class UserServlet extends BaseServlet {
         req.setCharacterEncoding("utf-8");
         //2.接收数据
         String tele = req.getParameter("tele");
-        String password = req.getParameter("password");
+        String encryptedPassword = req.getParameter("password");
+        //3.解密 密码
+        String password = KeyFileReader.readPrivateKeyFromFile(encryptedPassword);
         String checked = req.getParameter("checked");
-        //3.执行service方法
+        //4.执行service方法
         User user = userService.selectUser(tele, password);
         if (user != null) {
             //创建session会话
@@ -104,7 +113,7 @@ public class UserServlet extends BaseServlet {
             resp.setContentType("text/json;charset=utf-8");
             resp.getWriter().write(jsonString);
         } else {
-            //4.响应数据
+            //5.响应数据
             resp.getWriter().write("fail");
         }
     }
@@ -181,7 +190,11 @@ public class UserServlet extends BaseServlet {
         //1.处理乱码问题
         req.setCharacterEncoding("utf-8");
         //2.接收数据
-        String password = req.getParameter("password");
+        String encryptedPassword = req.getParameter("password");
+        System.out.println(encryptedPassword);
+        //3.解密 密码
+        String password = KeyFileReader.readPrivateKeyFromFile(encryptedPassword);
+        System.out.println(password);
         String _id = req.getParameter("id");
         //3.转换类型
         Integer id = JSON.parseObject(_id, Integer.class);

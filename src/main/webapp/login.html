@@ -55,6 +55,7 @@
 <script src="js/vue.js"></script>
 <script src="element-ui/lib/index.js"></script>
 <script src="js/axios-0.18.0.js"></script>
+<script src="js/jsencrypt.js"></script>
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
@@ -68,10 +69,19 @@
             this.form.password = this.getCookie('password');
         },
         mounted(){
+            //生成验证码
             this.changeCheckCode();
+            //初始化 jsencrypt 实例
+            this.loginEncrypt = new JSEncrypt();
+            // 获取公钥
+            this.loginFetchPublicKey();
         },
         data() {
             return {
+                //密钥
+                loginEncrypt: null,
+                //公钥
+                loginPublicKey: null,
                 //表单数据：
                 form:{
                     tele:'',
@@ -138,6 +148,8 @@
 
                                 this.user.tele = this.form.tele;
                                 this.user.password = this.form.password;
+                                //加密 密码
+                                this.user.password = this.loginEncrypt.encrypt(this.user.password);
                                 //发送ajax请求
                                 axios({
                                     method: 'get',
@@ -145,7 +157,7 @@
                                     params: {tele : this.user.tele, password : this.user.password, checked : this.checked}
                                 }).then(resp => {
                                     if (resp.data !== 'fail'){
-                                        //登录成功
+
                                         this.user = resp.data;
                                         //判断账号是否被封禁
                                         axios({
@@ -158,6 +170,7 @@
                                                 this.$message.error('该账号因违规已被封禁');
                                             } else {
                                                 //未被封禁
+                                                //登录成功
                                                 //消息提示
                                                 this.$message({
                                                     type:'success',
@@ -213,8 +226,23 @@
                     }
                 }
                 return null;
+            },
+            //获取 公钥
+            loginFetchPublicKey() {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/keyGeneratorServlet/getPublicKey'
+                }).then(resp => {
+                    this.loginPublicKey = resp.data;
+                    //设置公钥
+                    this.loginEncrypt.setPublicKey(this.loginPublicKey);
+                }).catch(error => {
+                    console.error('获取登录公钥失败', error);
+                    this.$message.error('获取登录公钥失败');
+                });
             }
-        }
+        },
+
     })
 
 </script>

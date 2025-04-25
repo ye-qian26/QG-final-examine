@@ -1109,17 +1109,23 @@
 <script src="js/vue.js"></script>
 <script src="element-ui/lib/index.js"></script>
 <script src="js/axios-0.18.0.js"></script>
+<script src="js/jsencrypt.js"></script>
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
+
     new Vue({
         el: '#app',
         mounted() {
             console.log(this.user.username);
+            //初始化 jsencrypt 实例
+            this.myEncrypt = new JSEncrypt();
             //加载主页板块信息
             this.changeMenuHomePage();
             //初始化webSocket连接
             this.initialWebSocket();
+            // 获取公钥
+            this.fetchPublicKey();
         },
         data() {
             //制定密码规则
@@ -1271,6 +1277,10 @@
                     likesUserId:'',
                     postId:''
                 },
+                //密钥
+                myEncrypt: null,
+                //公钥
+                publicKey: null,
                 //表单数据
                 form: {
                     name: localStorage.getItem('username'),
@@ -1911,18 +1921,22 @@
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         //判断原密码是否正确
+                        //对原密码 进行 加密
+                        const encryptPassword = this.myEncrypt.encrypt(this.form.password);
                         axios({
                             method: 'get',
-                            url: 'http://localhost:8080/Technical-Forum/userServlet/loginUser?'
-                                + "tele=" + this.user.tele + "&password=" + this.form.password
+                            url: 'http://localhost:8080/Technical-Forum/userServlet/loginUser',
+                            params: {tele : this.user.tele, password : encryptPassword}
                         }).then(resp => {
                             if (resp.data !== 'fail') {
                                 //原密码正确
                                 //修改密码
+                                //对密码 进行 加密
+                                const encryptNewPassword = this.myEncrypt.encrypt(this.form.newPassword);
                                 axios({
                                     method: 'get',
-                                    url: 'http://localhost:8080/Technical-Forum/userServlet/updateUserPassword?'
-                                        + "password=" + this.form.newPassword + "&id=" + this.user.id
+                                    url: 'http://localhost:8080/Technical-Forum/userServlet/updateUserPassword',
+                                    params: {password : encryptNewPassword, id : this.user.id}
                                 }).then(resp => {
                                     if (resp.data === 'success') {
                                         //修改成功
@@ -3740,6 +3754,20 @@
                         this.$message.error('删除失败，请稍后重试');
                     }
                 })
+            },
+            //获取 公钥
+            fetchPublicKey() {
+                axios({
+                    method:'get',
+                    url:'http://localhost:8080/Technical-Forum/keyGeneratorServlet/getPublicKey'
+                }).then(resp => {
+                    this.publicKey = resp.data;
+                    //console.log(this.publicKey);
+                    this.myEncrypt.setPublicKey(this.publicKey);
+                }).catch(error => {
+                    console.error('获取公钥失败', error);
+                    this.$message.error('获取公钥失败');
+                });
             }
         }
     })
