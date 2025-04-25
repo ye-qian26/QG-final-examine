@@ -30,13 +30,6 @@
         <!--记住用户信息复选框-->
         <!--<el-radio v-model="checked" label="1">记住我</el-radio>-->
         <el-checkbox v-model="checked">记住我</el-checkbox>
-<!--        &lt;!&ndash;选择普通用户还是管理员&ndash;&gt;-->
-<!--        <el-form-item label="身份选择">-->
-<!--            <el-radio-group v-model="form.select">-->
-<!--                <el-radio label="用户"></el-radio>-->
-<!--                <el-radio label="管理员"></el-radio>-->
-<!--            </el-radio-group>-->
-<!--        </el-form-item>-->
         <el-form-item label="验证码">
             <el-input placeholder="验证码" v-model="form.checkCode"></el-input>
             <el-image v-bind:src="checkCodeImg" @click="changeCheckCode"></el-image>
@@ -157,24 +150,25 @@
                                     params: {tele : this.user.tele, password : this.user.password, checked : this.checked}
                                 }).then(resp => {
                                     if (resp.data !== 'fail'){
-
                                         this.user = resp.data;
                                         //判断账号是否被封禁
                                         axios({
                                             method:'post',
                                             url:'http://localhost:8080/Technical-Forum/accountBanServlet/selectAccountBanByBanUserId',
                                             data: this.user.id
-                                        }).then(resp => {
-                                            if (resp.data !== 'fail'){
+                                        }).then(async resp => {
+                                            if (resp.data !== 'fail') {
                                                 //该账号已被封禁
                                                 this.$message.error('该账号因违规已被封禁');
                                             } else {
                                                 //未被封禁
                                                 //登录成功
+                                                //创建session
+                                                await this.createSession();
                                                 //消息提示
                                                 this.$message({
-                                                    type:'success',
-                                                    message:'登录成功！'
+                                                    type: 'success',
+                                                    message: '登录成功！'
                                                 })
                                                 // 登录成功，将相关信息存储到localStorage
                                                 localStorage.setItem('id', this.user.id);
@@ -184,7 +178,7 @@
                                                 localStorage.setItem('role', this.user.role);
 
                                                 // 跳转到user.html
-                                                window.location.href ='user.html';
+                                                window.location.href = 'user.html';
                                             }
                                             this.changeCheckCode();
                                         })
@@ -240,6 +234,18 @@
                     console.error('获取登录公钥失败', error);
                     this.$message.error('获取登录公钥失败');
                 });
+            },
+            //创建 用户session
+            async createSession(){
+                const resp = await axios({
+                    method:'post',
+                    url:'http://localhost:8080/Technical-Forum/userServlet/createUserSession',
+                    data:this.user
+                })
+                if (resp.data !== 'success') {
+                    //创建失败
+                    this.$message.error('session创建失败');
+                }
             }
         },
 

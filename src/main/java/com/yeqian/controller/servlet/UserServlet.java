@@ -89,9 +89,7 @@ public class UserServlet extends BaseServlet {
         //4.执行service方法
         User user = userService.selectUser(tele, password);
         if (user != null) {
-            //创建session会话
-            HttpSession session = req.getSession();
-            session.setAttribute("user", user);
+
 
             if ("true".equals(checked)) {
                 //用户勾选记住信息
@@ -278,5 +276,25 @@ public class UserServlet extends BaseServlet {
         } else {
             resp.getWriter().write("fail");
         }
+    }
+
+    /**
+     * 通过 用户对象 创建 session
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void createUserSession(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String jsonString = req.getReader().readLine();
+        //3.转换数据
+        User user = JSON.parseObject(jsonString, User.class);
+        //4.创建session
+        HttpSession session = req.getSession();
+        session.setAttribute("user", user);
+        //5.响应数据
+        resp.getWriter().write("success");
     }
 }
