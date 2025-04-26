@@ -8,6 +8,9 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.URLEncoder;
 
+/**
+ * 登录拦截器
+ */
 @WebFilter("/user.html")
 public class LoginFilter implements Filter {
 

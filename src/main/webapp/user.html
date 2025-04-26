@@ -1097,7 +1097,7 @@
     <el-dialog
             title="帖子点赞信息"
             :visible.sync="postLikesDialogVisible"
-            :before-close="handleClosePostlikes"
+            :before-close="handleClosePostLikes"
             width="50%"
     >
         <!--消息展示-->
@@ -2646,7 +2646,6 @@
             },
             //增加封禁用户
             addBan(post) {
-                console.log(post);
                 this.$confirm('封禁后用户将无法在对应板块继续发帖，是否继续?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
@@ -2904,24 +2903,29 @@
             },
             //根据 用户id 查询 封禁表
             async selectBanByUserId() {
-                const resp = await axios({
-                    method: 'get',
-                    url: 'http://localhost:8080/Technical-Forum/banServlet/selectBanByUserId',
-                    params: {userId: this.user.id}
-                })
-                if (resp.data !== 'fail') {
-                    //有数据
-                    this.myBanUserData = resp.data;
-                    //显示被封禁的用户昵称和板块名称
-                    this.userMap = await this.buildBanUserMap(this.myBanUserData);
-                    this.plateMap = await this.buildPlateMap(this.myBanUserData);
-                    this.replaceBanUserIdWithUsername(this.myBanUserData);
-                    this.replacePlateWithPlateName(this.myBanUserData);
-                    return resp.data;
-                } else {
-                    this.myBanUserData = null;
-                    this.$message.info('暂无所封禁用户信息');
-                    return false;
+                this.myBanUserData = null;
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/banServlet/selectBanByUserId',
+                        params: {userId: this.user.id}
+                    })
+                    if (resp.data !== 'fail') {
+                        //有数据
+                        this.myBanUserData = resp.data;
+                        //显示被封禁的用户昵称和板块名称
+                        this.userMap = await this.buildBanUserMap(this.myBanUserData);
+                        this.replaceBanUserIdWithUsername(this.myBanUserData);
+                        this.plateMap = await this.buildPlateMap(this.myBanUserData);
+                        this.replacePlateWithPlateName(this.myBanUserData);
+                        return resp.data;
+                    } else {
+                        this.myBanUserData = null;
+                        this.$message.info('暂无所封禁用户信息');
+                        return false;
+                    }
+                } catch (e) {
+                    console.log('根据用户id查询封禁表报异常', e);
                 }
             },
             //构建被封禁用户ID到用户名的映射对象
