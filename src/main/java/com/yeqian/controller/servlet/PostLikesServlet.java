@@ -97,4 +97,23 @@ public class PostLikesServlet extends BaseServlet {
             resp.getWriter().write("fail");
         }
     }
+
+    /**
+     * 根据 帖子id 删除 帖子点赞表
+     * @param req
+     * @param resp
+     * @throws Exception
+     */
+    public void deletePostLikesByPostId(HttpServletRequest req, HttpServletResponse resp) throws Exception {
+        //1.处理乱码问题
+        req.setCharacterEncoding("utf-8");
+        //2.接收数据
+        String _postId = req.getReader().readLine();
+        //3.转换数据
+        Integer postId = JSON.parseObject(_postId, Integer.class);
+        //4.执行service方法
+        postLikesService.deletePostLikesByPostId(postId);
+        //5.响应数据
+        resp.getWriter().write("success");
+    }
 }

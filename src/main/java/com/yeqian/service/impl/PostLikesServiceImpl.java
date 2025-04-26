@@ -33,4 +33,9 @@ public class PostLikesServiceImpl implements PostLikesService {
     public List<PostLikes> selectPostLikesByUserId(Integer likesUserId) {
         return postLikesMapper.selectPostLikesByUserId(likesUserId);
     }
+
+    @Override
+    public void deletePostLikesByPostId(Integer postId) {
+        postLikesMapper.deletePostLikesByPostId(postId);
+    }
 }

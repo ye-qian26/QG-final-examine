@@ -35,4 +35,10 @@ public interface PostLikesService {
      * @return
      */
     List<PostLikes> selectPostLikesByUserId(Integer likesUserId);
+
+    /**
+     * 根据 帖子id 删除 帖子点赞表
+     * @param postId
+     */
+    void deletePostLikesByPostId(Integer postId);
 }

@@ -21,7 +21,7 @@ public interface ReviewMapper {
      * @param postId
      * @return
      */
-    @Select("select * from review where post_id = #{postId} and review_id is null")
+    @Select("select * from review where post_id = #{postId} and review_id is null order by likes desc")
     List<Review> selectReviewByPostId(@Param("postId") Integer postId);
 
     /**
@@ -50,7 +50,7 @@ public interface ReviewMapper {
      * @param reviewId
      * @return
      */
-    @Select("select * from review where review_id =#{reviewId}")
+    @Select("select * from review where review_id =#{reviewId} order by likes desc")
     List<Review> selectByReviewId(@Param("reviewId") Integer reviewId);
 
     /**

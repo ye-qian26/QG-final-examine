@@ -207,6 +207,7 @@
             //重置信息
             resetLoginForm(formName) {
                 this.$refs[formName].resetFields();
+                this.changeCheckCode();
             },
             //获取cookie信息
             getCookie(name){

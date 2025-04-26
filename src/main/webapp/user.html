@@ -89,7 +89,7 @@
 
         <el-menu-item index="2" @click="changeMenuMyPlate">我的板块</el-menu-item>
 
-        <el-menu-item index="3">个人信息中心</el-menu-item>
+        <el-menu-item index="3" @click="changeMenuPersonalInfo">个人信息中心</el-menu-item>
     </el-menu>
 
     <!--主页-->
@@ -113,7 +113,7 @@
             </el-form-item>
         </el-form>
         <el-tabs v-model="activeTab" @tab-click="handleHomePageTab">
-            <el-tab-pane v-for="(plate, index) in interestedPlate" :key="index" :label="plate.name" :name="plate.id">
+            <el-tab-pane v-for="(plate, index) in interestedPlate" :key="plate.id" :label="plate.name" :name="plate.id">
                 <!--关注板块功能-->
                 <div v-if="plate.isInterested">
                     <el-button round @click="toggleInterestPlate(plate)">已关注板块</el-button>
@@ -256,7 +256,7 @@
                 </el-card>
             </el-tab-pane>
 
-            <el-tab-pane v-for="(plate, index) in unInterestedPlate" :key="index" :label="plate.name" :name="plate.id">
+            <el-tab-pane v-for="(plate, index) in unInterestedPlate" :key="plate.id" :label="plate.name" :name="plate.id">
                 <!--关注板块功能-->
                 <div v-if="plate.isInterested">
                     <el-button round @click="toggleInterestPlate(plate)">已关注板块</el-button>
@@ -500,9 +500,13 @@
         <!-- 查看帖子历史记录 -->
         <el-button type="success" @click="myHistoricalRecord">帖子足迹</el-button>
         <div v-if="user.role==='2'">
-            <!-- 管理员 -->
-            <el-button type="info" @click="infoClick2">用户申请信息</el-button>
+            <!-- 管理员功能 -->
+            管理员功能：<br>
+            <!-- 用户举报信息 -->
             <el-button type="info" @click="reportedUserinfoClick">用户举报信息通知</el-button>
+            <!-- 用户申请信息 -->
+            <el-button type="info" @click="infoClick2">用户申请信息</el-button>
+            <!-- 查看已封禁的账号 -->
             <el-button type="danger" @click="checkBannedAccount">已封禁的账号</el-button>
         </div>
 
@@ -835,11 +839,11 @@
     >
 
         <!-- 用户举报信息列表 -->
-        <div v-for="reportedUser in reportedUserData" :key="reportedUser.id" class="reportedUser-item">
+        <div v-for="(reportedUser, index) in reportedUserData" :key="reportedUser.id" class="reportedUser-item">
             <div>
                 <span>被举报者</span>：{{ reportedUser.username}}<br>
                 <span>举报内容</span>：{{ reportedUser.reportContent }}
-                <el-button type="success" @click="deleteReportedUserById(reportedUser)">忽略</el-button>
+                <el-button type="success" @click="deleteReportedUserById(reportedUser, index)">忽略</el-button>
                 <div v-if="reportedUser.isAccountBanned">
                     <el-button @click="deleteAccountBan(reportedUser.userId)">账号已封禁</el-button>
                 </div>
@@ -958,7 +962,7 @@
             :before-close="handleCloseHistoricalRecord"
             width="50%"
     >
-        <el-card class="post-card" v-for="post in historicalRecordData" :key="post.id">
+        <el-card class="post-card" v-for="(post, index) in historicalRecordData" :key="post.id">
             <template #header>
                 <div class="post-header">
                     <span>{{ post.username }}</span>
@@ -982,7 +986,7 @@
             <div class="post-content">{{ post.content }}</div>
 
             <el-button type="primary" @click="checkReview(post)">打开评论</el-button>
-            <el-button type="success" @click="deleteHistoricalRecord(post)">清理</el-button>
+            <el-button type="success" @click="deleteHistoricalRecord(post, index)">清理</el-button>
         </el-card>
     </el-dialog>
 
@@ -1113,7 +1117,6 @@
 <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
 
 <script>
-
     new Vue({
         el: '#app',
         mounted() {
@@ -1477,7 +1480,8 @@
                     ],
                     //板块名
                     plateName: [
-                        {required: true, message: '板块名不能为空', trigger: 'blur'}
+                        {required: true, message: '板块名不能为空', trigger: 'blur'},
+                        {max: 15, message: '板块名不能为空', trigger: 'blur'}
                     ],
                     //帖子内容
                     content: [
@@ -1661,7 +1665,7 @@
             },
             handleCloseReview() {
                 this.reviewDialogVisible = false;
-                this.reviewData = null;
+                this.reviewData = [];
             },
             handleCloseReportPost() {
                 this.reportPostDialogVisible = false;
@@ -1738,7 +1742,10 @@
             async changeMenuHomePage() {
                 this.activeTab = null;
                 this.plateData = null;
-                try { //加载所有板块
+                this.interestedPlate = [];
+                this.unInterestedPlate = [];
+                try {
+                    //加载所有板块
                     await this.selectAllPlate();
                     //加载用户对所有板块的关注情况
                     await this.selectInterestPlateByPlateData(this.plateData);
@@ -1754,6 +1761,10 @@
                 this.activeTab = null;
                 this.plateData = null;
                 this.selectPlateByUserId();
+            },
+            //切换至“个人信息中心”事件
+            changeMenuPersonalInfo() {
+                this.form.name = localStorage.getItem('username');
             },
             //切换标签页事件
             async handleTab() {
@@ -2149,12 +2160,9 @@
                         //this.postData = this._postData;
                     } else {
                         //无数据
-                        this._postData = null;
+                        this._postData = [];
                         //该板块暂无帖子
-                        this.$notify.info({
-                            title: '消息',
-                            message: '该板块暂无帖子~'
-                        });
+
                     }
                     return this._postData;
                 } catch (error) {
@@ -2255,6 +2263,8 @@
                     await this.deleteReviewByPostId(post.id);
                     //删除对应举报帖子信息
                     await this.deleteReportedPostByPostId(post.id);
+                    //删除对应帖子点赞表
+                    await this.deletePostLikesByPostId(post.id);
                     //删除帖子
                     await this.deletePostById(post.id);
                     this.postData = await this.selectPostByPlateId();
@@ -2758,21 +2768,28 @@
                 }
             },
             //根据 板块名 模糊查询 板块
-            selectPlateByName() {
-                axios({
-                    method: 'get',
-                    url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByName',
-                    params: {plateName: this.plateForm.vaguePlateName, select: this.plateValue}
-                }).then(resp => {
+            async selectPlateByName() {
+                try {
+                    const resp = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8080/Technical-Forum/plateServlet/selectPlateByName',
+                        params: {plateName: this.plateForm.vaguePlateName, select: this.plateValue}
+                    })
                     if (resp.data !== 'fail') {
                         //有数据
                         this.interestedPlate = resp.data;
+                        //加载用户关注板块情况
+                        await this.selectInterestPlateByPlateData(this.interestedPlate);
+                        this.activeTab = null;
                         this.unInterestedPlate = null;
                     } else {
                         //无数据
                         this.$message.error('未找到相关内容的板块');
                     }
-                })
+                } catch (e) {
+                    console.log('搜索板块时报异常', e);
+                }
+
             },
             //搜索帖子
             async searchPost() {
@@ -3133,7 +3150,7 @@
                     this.interestedPlateIds = resp.data.map(item => item.interestedPlateId);
                 } else {
                     //用户没有关注相关板块
-                    this.interestedPlateIds = null;
+                    this.interestedPlateIds = [];
                 }
                 //将对应板块存入集合中
                 this.interestedPlate = plateData.filter(plate => this.interestedPlateIds.includes(plate.id));
@@ -3151,10 +3168,10 @@
                     //用户有关注相关用户
                     //将板块id依次存入对应id数组中
                     this.interestedUserIds = resp.data.map(item => item.interestedUserId);
-                    console.log(this.interestedUserIds);
+                    //console.log(this.interestedUserIds);
                 } else {
                     //用户没有关注相关用户
-                    this.interestedUserIds = null;
+                    this.interestedUserIds = [];
                 }
                 //将对应用户的帖子存入集合中
                 this.interestedUserPosts = postData.filter(post => this.interestedUserIds.includes(post.userId));
@@ -3176,7 +3193,7 @@
                 })
             },
             //删除历史记录
-            deleteHistoricalRecord(post) {
+            deleteHistoricalRecord(post, index) {
                 this.$confirm('确认清理该记录吗?', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
@@ -3193,8 +3210,8 @@
                             //清理成功
                             //消息提示
                             this.$message.success('清理记录成功！');
-                            //重新加载数据
-                            this.selectHistoricalRecordByUserId();
+                            //删除对应数据
+                            this.historicalRecordData.splice(index, 1);
                         }
                     })
                 }).catch(() => {
@@ -3274,7 +3291,7 @@
                 return this.reportedUserData;
             },
             //根据 id 删除 举报用户信息
-            deleteReportedUserById(reportUser) {
+            deleteReportedUserById(reportUser, index) {
                 axios({
                     method: 'post',
                     url: 'http://localhost:8080/Technical-Forum/reportedUserServlet/deleteReportedUserById',
@@ -3285,7 +3302,7 @@
                         //消息提示
                         this.$message.success('已忽略该举报信息');
                         //重新加载数据
-                        this.selectAllReportedUser();
+                        this.reportedUserData.splice(index, 1);
                     }
                 })
             },
@@ -3311,20 +3328,25 @@
                     cancelButtonText: '取消',
                     type: 'warning'
                 }).then(() => {
-                    this.accountBan.userId = this.user.id;
-                    this.accountBan.banUserId = reportedUser.userId;
-                    axios({
-                        method: 'post',
-                        url: 'http://localhost:8080/Technical-Forum/accountBanServlet/addAccountBan',
-                        data: this.accountBan
-                    }).then(resp => {
-                        if (resp.data === 'success') {
-                            //账号封禁成功
-                            this.$message.success('账号封禁成功');
-                            //重新加载数据
-                            this.selectReportedUserIsAccountBanned(this.reportedUserData);
-                        }
-                    })
+                    if (this.user.id == reportedUser.userId) {
+                        //该用户是自己
+                        this.$message.warning('很抱歉，该用户是您自己~');
+                    } else {
+                        this.accountBan.userId = this.user.id;
+                        this.accountBan.banUserId = reportedUser.userId;
+                        axios({
+                            method: 'post',
+                            url: 'http://localhost:8080/Technical-Forum/accountBanServlet/addAccountBan',
+                            data: this.accountBan
+                        }).then(resp => {
+                            if (resp.data === 'success') {
+                                //账号封禁成功
+                                this.$message.success('账号封禁成功');
+                                //重新加载数据
+                                this.selectReportedUserIsAccountBanned(this.reportedUserData);
+                            }
+                        })
+                    }
                 })
             },
             //删除 账号封禁
@@ -3546,27 +3568,31 @@
             async parseReviewContent(content, reviewId) {
                 const parts = content.split(' ');
                 for (let part of parts) {
-                    if (part.startsWith('@')) {
-                        const startIndex = part.indexOf('@') + 1;
-                        const lastIndex = part.indexOf(':');
-                        const userId = part.slice(startIndex, lastIndex);
-                        const username = part.slice(lastIndex + 1);
-                        //判断是否有该用户
-                        const resp = await axios({
-                            method: 'get',
-                            url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserByUsernameAndId',
-                            params: {username: username, id: userId}
-                        })
-                        if (resp.data !== 'fail') {
-                            //有该用户
-                            this.reviewUser.userId = this.user.id;
-                            this.reviewUser.remindUserId = userId;
-                            this.reviewUser.postId = this._postId;
-                            this.reviewUser.reviewId = reviewId;
-                            //在@用户表删除信息（防止同一条评论多次@同一用户）
-                            await this.deleteReviewUser(this.reviewUser);
-                            //添加进@用户表
-                            await this.addReviewUser(this.reviewUser);
+                    console.log(part);
+                    if (part.includes('@')) {
+                        console.log('part.....');
+                        const startIndex = part.lastIndexOf('@') + 1;
+                        const lastIndex = part.lastIndexOf(':');
+                        if (startIndex < lastIndex) {
+                            const userId = part.slice(startIndex, lastIndex);
+                            const username = part.slice(lastIndex + 1);
+                            //判断是否有该用户
+                            const resp = await axios({
+                                method: 'get',
+                                url: 'http://localhost:8080/Technical-Forum/userServlet/selectUserByUsernameAndId',
+                                params: {username: username, id: userId}
+                            })
+                            if (resp.data !== 'fail') {
+                                //有该用户
+                                this.reviewUser.userId = this.user.id;
+                                this.reviewUser.remindUserId = userId;
+                                this.reviewUser.postId = this._postId;
+                                this.reviewUser.reviewId = reviewId;
+                                //在@用户表删除信息（防止同一条评论多次@同一用户）
+                                await this.deleteReviewUser(this.reviewUser);
+                                //添加进@用户表
+                                await this.addReviewUser(this.reviewUser);
+                            }
                         }
                     }
                 }
@@ -3768,6 +3794,22 @@
                     console.error('获取公钥失败', error);
                     this.$message.error('获取公钥失败');
                 });
+            },
+            //根据 帖子id 删除 帖子点赞表
+            async deletePostLikesByPostId(postId){
+                try {
+                    const resp = await axios({
+                        method: 'post',
+                        url: 'http://localhost:8080/Technical-Forum/postLikesServlet/deletePostLikesByPostId',
+                        data: postId
+                    })
+                    if (resp.data !== 'success') {
+                        //删除失败
+                        this.$message.error('删除帖子点赞表时出错');
+                    }
+                } catch (e) {
+                    console.log('删除帖子点赞表时报异常', e);
+                }
             }
         }
     })

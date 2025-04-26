@@ -38,6 +38,11 @@ public interface PostLikesMapper {
     @Select("select * from post_likes where likes_user_id = #{likesUserId} order by id desc")
     List<PostLikes> selectPostLikesByUserId(@Param("likesUserId") Integer likesUserId);
 
-
+    /**
+     * 根据 帖子id 删除 帖子点赞表
+     * @param postId
+     */
+    @Delete("delete from post_likes where post_id = #{postId}")
+    void deletePostLikesByPostId(@Param("postId") Integer postId);
 
 }
